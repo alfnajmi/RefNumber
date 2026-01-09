@@ -14,11 +14,14 @@ export async function GET() {
 
         // Map snake_case to camelCase
         const registrations: Registration[] = data.map((reg) => ({
+            id: reg.id,
             number: reg.number,
             type: reg.type as 'Surat' | 'Memo',
+            fileSecurityCode: reg.file_security_code,
             staffId: reg.staff_id,
             name: reg.name,
             department: reg.department,
+            referenceNumber: reg.reference_number,
             registeredAt: reg.registered_at,
         }));
 
@@ -36,7 +39,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { number, type, staffId, name, department } = body;
+        const { number, type, fileSecurityCode, staffId, name, department, referenceNumber } = body;
 
         if (!number || !type || !staffId || !name || !department) {
             return NextResponse.json(
@@ -52,9 +55,11 @@ export async function POST(request: NextRequest) {
                 {
                     number,
                     type,
+                    file_security_code: fileSecurityCode,
                     staff_id: staffId,
                     name,
                     department,
+                    reference_number: referenceNumber,
                 },
             ])
             .select()
@@ -71,11 +76,14 @@ export async function POST(request: NextRequest) {
         }
 
         const newRegistration: Registration = {
+            id: data.id,
             number: data.number,
             type: data.type as 'Surat' | 'Memo',
+            fileSecurityCode: data.file_security_code,
             staffId: data.staff_id,
             name: data.name,
             department: data.department,
+            referenceNumber: data.reference_number,
             registeredAt: data.registered_at,
         };
 
