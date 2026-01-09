@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Registration } from "@/types";
 import { staffDatabase, getStaffByDepartment } from "@/data/staff";
-import { DEPARTMENTS } from "@/types";
+import { DEPARTMENTS, DEPARTMENT_CODES, FILE_SECURITY_CODES } from "@/types";
 
 export default function Home() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
@@ -11,6 +11,7 @@ export default function Home() {
   const [department, setDepartment] = useState("");
   const [name, setName] = useState("");
   const [staffId, setStaffId] = useState("");
+  const [fileSecurityCode, setFileSecurityCode] = useState("T");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Registration[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
@@ -19,6 +20,10 @@ export default function Home() {
   const [resetConfirmText, setResetConfirmText] = useState("");
   const [docType, setDocType] = useState<'Surat' | 'Memo'>("Surat");
   const [nextNumber, setNextNumber] = useState("0001");
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletingRegistration, setDeletingRegistration] = useState<Registration | null>(null);
 
   // Fetch registrations on mount
   useEffect(() => {
@@ -77,6 +82,8 @@ export default function Home() {
       return;
     }
 
+    const referenceNumber = generateReferenceNumber();
+
     try {
       const response = await fetch("/api/registrations", {
         method: "POST",
@@ -84,9 +91,11 @@ export default function Home() {
         body: JSON.stringify({
           number: mailingNumber,
           type: docType,
+          fileSecurityCode,
           staffId,
           name,
           department,
+          referenceNumber,
         }),
       });
 
@@ -187,9 +196,107 @@ export default function Home() {
     }
   };
 
+  const handleEditClick = (registration: Registration) => {
+    setEditingRegistration(registration);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteClick = (registration: Registration) => {
+    setDeletingRegistration(registration);
+    setShowDeleteModal(true);
+  };
+
+  const handleCancelEdit = () => {
+    setShowEditModal(false);
+    setEditingRegistration(null);
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteModal(false);
+    setDeletingRegistration(null);
+  };
+
+  const handleConfirmEdit = async () => {
+    if (!editingRegistration || !editingRegistration.id) return;
+
+    // Generate reference number for the edited registration
+    const deptCode = DEPARTMENT_CODES[editingRegistration.department] || "0";
+    const typeCode = editingRegistration.type === "Memo" ? "2" : "1";
+    const year = new Date().getFullYear();
+    const sequenceNumber = editingRegistration.number.padStart(3, "0");
+    const securityCode = editingRegistration.fileSecurityCode || "T";
+    const referenceNumber = `MCMC (${securityCode}) DIGD -${deptCode}/${typeCode}/${year}/${sequenceNumber}`;
+
+    try {
+      const response = await fetch(`/api/registrations/${editingRegistration.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          number: editingRegistration.number,
+          type: editingRegistration.type,
+          fileSecurityCode: editingRegistration.fileSecurityCode,
+          staffId: editingRegistration.staffId,
+          name: editingRegistration.name,
+          department: editingRegistration.department,
+          referenceNumber,
+        }),
+      });
+
+      if (response.ok) {
+        await fetchRegistrations();
+        setShowEditModal(false);
+        setEditingRegistration(null);
+        setSuccessMessage("Registration updated successfully");
+        setTimeout(() => setSuccessMessage(""), 5000);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to update registration");
+      }
+    } catch (error) {
+      console.error("Error updating registration:", error);
+      alert("Failed to update registration");
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingRegistration || !deletingRegistration.id) return;
+
+    try {
+      const response = await fetch(`/api/registrations/${deletingRegistration.id}`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchRegistrations();
+        setShowDeleteModal(false);
+        setDeletingRegistration(null);
+        setSuccessMessage("Registration deleted successfully");
+        setTimeout(() => setSuccessMessage(""), 5000);
+      } else {
+        const error = await response.json();
+        alert(error.error || "Failed to delete registration");
+      }
+    } catch (error) {
+      console.error("Error deleting registration:", error);
+      alert("Failed to delete registration");
+    }
+  };
+
   const availableNames = department
     ? getStaffByDepartment(department).map((s) => s.name)
     : [];
+
+  // Generate reference number based on format: MCMC (T) DIGD -3/2/2026/002
+  const generateReferenceNumber = () => {
+    if (!department || !mailingNumber) return "";
+
+    const deptCode = DEPARTMENT_CODES[department] || "0";
+    const typeCode = docType === "Memo" ? "2" : "1"; // 1 for Surat, 2 for Memo
+    const year = new Date().getFullYear();
+    const sequenceNumber = mailingNumber.padStart(3, "0");
+
+    return `MCMC (${fileSecurityCode}) DIGD -${deptCode}/${typeCode}/${year}/${sequenceNumber}`;
+  };
 
   return (
     <div className="min-h-screen p-8">
@@ -314,7 +421,7 @@ export default function Home() {
             </div>
 
             {/* Staff ID */}
-            <div className="mb-6">
+            <div className="mb-4">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Staff ID
               </label>
@@ -325,6 +432,65 @@ export default function Home() {
                 className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
               />
             </div>
+
+            {/* File Security Code */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                File Security Code
+              </label>
+              <select
+                value={fileSecurityCode}
+                onChange={(e) => setFileSecurityCode(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {FILE_SECURITY_CODES.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Mailing Number */}
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Mailing Number
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g., 0001"
+                  value={mailingNumber}
+                  onChange={(e) => setMailingNumber(e.target.value)}
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={handleAutoGenerate}
+                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
+                >
+                  Auto
+                </button>
+              </div>
+            </div>
+
+            {/* Reference Number Preview */}
+            {mailingNumber && department && (
+              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
+                <label className="block text-sm font-medium text-blue-900 mb-2">
+                  Generated Reference Number
+                </label>
+                <div className="text-lg font-mono font-bold text-blue-700">
+                  {generateReferenceNumber()}
+                </div>
+                <div className="text-xs text-blue-600 mt-2">
+                  <div>Format: MCMC (T) DIGD -[Dept]/[Type]/[Year]/[Seq]</div>
+                  <div className="mt-1">
+                    <span className="font-semibold">Dept Code:</span> {DEPARTMENT_CODES[department]} •
+                    <span className="font-semibold ml-2">Type Code:</span> {docType === "Memo" ? "2" : "1"} (1=Surat, 2=Memo)
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Register Button */}
             <button
@@ -413,7 +579,10 @@ export default function Home() {
                     Type
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Number
+                    Seq. No.
+                  </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Reference Number
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">
                     Staff ID
@@ -427,13 +596,16 @@ export default function Home() {
                   <th className="text-left py-3 px-4 font-semibold text-gray-900">
                     Registered At
                   </th>
+                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {!Array.isArray(registrations) || registrations.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={5}
+                      colSpan={8}
                       className="text-center py-8 text-gray-500"
                     >
                       No records found
@@ -451,12 +623,31 @@ export default function Home() {
                           {reg.type}
                         </span>
                       </td>
-                      <td className="py-3 px-4 font-mono">{reg.number}</td>
+                      <td className="py-3 px-4 font-mono text-sm">{reg.number}</td>
+                      <td className="py-3 px-4 font-mono text-sm font-medium text-blue-600">
+                        {reg.referenceNumber || '-'}
+                      </td>
                       <td className="py-3 px-4">{reg.staffId}</td>
                       <td className="py-3 px-4">{reg.name}</td>
-                      <td className="py-3 px-4">{reg.department}</td>
-                      <td className="py-3 px-4">
+                      <td className="py-3 px-4 text-sm">{reg.department}</td>
+                      <td className="py-3 px-4 text-sm">
                         {new Date(reg.registeredAt).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4">
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(reg)}
+                            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(reg)}
+                            className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -508,6 +699,232 @@ export default function Home() {
                 className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
                 Confirm Reset
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit Modal */}
+      {showEditModal && editingRegistration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              Edit Registration
+            </h3>
+            <div className="mb-4">
+              {/* Document Type */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Document Type
+                </label>
+                <select
+                  value={editingRegistration.type}
+                  onChange={(e) =>
+                    setEditingRegistration({
+                      ...editingRegistration,
+                      type: e.target.value as 'Surat' | 'Memo',
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="Surat">Surat</option>
+                  <option value="Memo">Memo</option>
+                </select>
+              </div>
+
+              {/* Number */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Number
+                </label>
+                <input
+                  type="text"
+                  value={editingRegistration.number}
+                  onChange={(e) =>
+                    setEditingRegistration({
+                      ...editingRegistration,
+                      number: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              {/* File Security Code */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  File Security Code
+                </label>
+                <select
+                  value={editingRegistration.fileSecurityCode || "T"}
+                  onChange={(e) =>
+                    setEditingRegistration({
+                      ...editingRegistration,
+                      fileSecurityCode: e.target.value,
+                    })
+                  }
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {FILE_SECURITY_CODES.map((item) => (
+                    <option key={item.code} value={item.code}>
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Department */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Department
+                </label>
+                <select
+                  value={editingRegistration.department}
+                  onChange={(e) => {
+                    setEditingRegistration({
+                      ...editingRegistration,
+                      department: e.target.value,
+                      name: "",
+                      staffId: "",
+                    });
+                  }}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select a department</option>
+                  {DEPARTMENTS.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Name */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Name
+                </label>
+                <select
+                  value={editingRegistration.name}
+                  onChange={(e) => {
+                    const selectedName = e.target.value;
+                    const staff = staffDatabase.find(
+                      (s) =>
+                        s.name === selectedName &&
+                        s.department === editingRegistration.department
+                    );
+                    setEditingRegistration({
+                      ...editingRegistration,
+                      name: selectedName,
+                      staffId: staff?.id || "",
+                    });
+                  }}
+                  disabled={!editingRegistration.department}
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+                >
+                  <option value="">Select a name</option>
+                  {editingRegistration.department &&
+                    getStaffByDepartment(editingRegistration.department).map(
+                      (s) => (
+                        <option key={s.name} value={s.name}>
+                          {s.name}
+                        </option>
+                      )
+                    )}
+                </select>
+              </div>
+
+              {/* Staff ID */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Staff ID
+                </label>
+                <input
+                  type="text"
+                  value={editingRegistration.staffId}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
+                />
+              </div>
+
+              {/* Reference Number Preview */}
+              {editingRegistration.number && editingRegistration.department && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded">
+                  <label className="block text-xs font-medium text-blue-900 mb-1">
+                    Updated Reference Number
+                  </label>
+                  <div className="text-sm font-mono font-bold text-blue-700">
+                    {`MCMC (${editingRegistration.fileSecurityCode || "T"}) DIGD -${DEPARTMENT_CODES[editingRegistration.department]}/${editingRegistration.type === "Memo" ? "2" : "1"}/${new Date().getFullYear()}/${editingRegistration.number.padStart(3, "0")}`}
+                  </div>
+                </div>
+              )}
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelEdit}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmEdit}
+                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium"
+              >
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && deletingRegistration && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 mb-4">
+              ⚠️ Confirm Delete
+            </h3>
+            <div className="mb-4">
+              <p className="text-gray-700 mb-2">
+                Are you sure you want to delete this registration?
+              </p>
+              <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
+                <div className="text-sm text-gray-700">
+                  <div className="mb-1">
+                    <span className="font-semibold">Type:</span>{" "}
+                    {deletingRegistration.type}
+                  </div>
+                  <div className="mb-1">
+                    <span className="font-semibold">Number:</span>{" "}
+                    {deletingRegistration.number}
+                  </div>
+                  <div className="mb-1">
+                    <span className="font-semibold">Name:</span>{" "}
+                    {deletingRegistration.name}
+                  </div>
+                  <div className="mb-1">
+                    <span className="font-semibold">Department:</span>{" "}
+                    {deletingRegistration.department}
+                  </div>
+                </div>
+              </div>
+              <p className="text-sm text-red-600 font-medium">
+                This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={handleCancelDelete}
+                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium"
+              >
+                Delete
               </button>
             </div>
           </div>
