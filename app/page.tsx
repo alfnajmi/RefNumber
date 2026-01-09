@@ -1,25 +1,24 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Registration } from "@/types";
-import { staffDatabase, getStaffByDepartment } from "@/data/staff";
-import { DEPARTMENTS, DEPARTMENT_CODES, FILE_SECURITY_CODES } from "@/types";
+import { DEPARTMENT_CODES } from "@/types";
+import RegistrationForm from "@/components/registration/RegistrationForm";
+import QuickCheck from "@/components/quick-check/QuickCheck";
+import RegistrationLogsTable from "@/components/logs/RegistrationLogsTable";
+import ResetConfirmationModal from "@/components/modals/ResetConfirmationModal";
+import EditRegistrationModal from "@/components/modals/EditRegistrationModal";
+import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal";
+import NoticeMessage from "@/components/ui/NoticeMessage";
 
 export default function Home() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
-  const [mailingNumber, setMailingNumber] = useState("");
-  const [department, setDepartment] = useState("");
-  const [name, setName] = useState("");
-  const [staffId, setStaffId] = useState("");
-  const [fileSecurityCode, setFileSecurityCode] = useState("T");
-  const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<Registration[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
-  const [docType, setDocType] = useState<'Surat' | 'Memo'>("Surat");
-  const [nextNumber, setNextNumber] = useState("0001");
+  const [docType] = useState<'Surat' | 'Memo'>("Surat");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -27,20 +26,34 @@ export default function Home() {
 
   // Fetch registrations on mount
   useEffect(() => {
-    fetchRegistrations();
-  }, []);
+    let isMounted = true;
 
-  // Calculate next available number based on type
-  useEffect(() => {
-    const typeRegistrations = registrations.filter(r => r.type === docType);
-    if (typeRegistrations.length === 0) {
-      setNextNumber("0001");
-    } else {
-      const numbers = typeRegistrations.map((r) => parseInt(r.number));
-      const maxNumber = Math.max(...numbers);
-      setNextNumber((maxNumber + 1).toString().padStart(4, "0"));
-    }
-  }, [registrations, docType]);
+    const loadRegistrations = async () => {
+      try {
+        const response = await fetch("/api/registrations");
+        const data = await response.json();
+        if (isMounted) {
+          if (response.ok && Array.isArray(data)) {
+            setRegistrations(data);
+          } else {
+            console.error("Failed to fetch registrations:", data.error || "Unknown error");
+            setRegistrations([]);
+          }
+        }
+      } catch (error) {
+        if (isMounted) {
+          console.error("Error fetching registrations:", error);
+          setRegistrations([]);
+        }
+      }
+    };
+
+    loadRegistrations();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const fetchRegistrations = async () => {
     try {
@@ -58,45 +71,36 @@ export default function Home() {
     }
   };
 
+  // Calculate next available number based on type
+  const nextNumber = useMemo(() => {
+    const typeRegistrations = registrations.filter(r => r.type === docType);
+    if (typeRegistrations.length === 0) {
+      return "0001";
+    } else {
+      const numbers = typeRegistrations.map((r) => parseInt(r.number));
+      const maxNumber = Math.max(...numbers);
+      return (maxNumber + 1).toString().padStart(4, "0");
+    }
+  }, [registrations, docType]);
+
   const handleAutoGenerate = () => {
-    setMailingNumber(nextNumber);
+    return nextNumber;
   };
 
-  const handleDepartmentChange = (dept: string) => {
-    setDepartment(dept);
-    setName("");
-    setStaffId("");
-  };
-
-  const handleNameChange = (selectedName: string) => {
-    setName(selectedName);
-    const staff = staffDatabase.find((s) => s.name === selectedName && s.department === department);
-    if (staff) {
-      setStaffId(staff.id);
-    }
-  };
-
-  const handleRegister = async () => {
-    if (!mailingNumber || !department || !name || !staffId) {
-      alert("Please fill in all fields");
-      return;
-    }
-
-    const referenceNumber = generateReferenceNumber();
-
+  const handleRegister = async (data: {
+    number: string;
+    type: 'Surat' | 'Memo';
+    fileSecurityCode: string;
+    staffId: string;
+    name: string;
+    department: string;
+    referenceNumber: string;
+  }) => {
     try {
       const response = await fetch("/api/registrations", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          number: mailingNumber,
-          type: docType,
-          fileSecurityCode,
-          staffId,
-          name,
-          department,
-          referenceNumber,
-        }),
+        body: JSON.stringify(data),
       });
 
       if (response.ok) {
@@ -104,11 +108,7 @@ export default function Home() {
         setSuccessMessage(
           `Number ${newReg.number} successfully registered to ${newReg.name} (Staff ID: ${newReg.staffId})`
         );
-        setMailingNumber("");
-        setDepartment("");
-        setName("");
-        setStaffId("");
-        fetchRegistrations();
+        await fetchRegistrations();
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         const error = await response.json();
@@ -121,7 +121,6 @@ export default function Home() {
   };
 
   const handleSearch = async (query: string) => {
-    setSearchQuery(query);
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -129,53 +128,12 @@ export default function Home() {
 
     try {
       const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
-      const data = await response.json();
-      if (response.ok && Array.isArray(data)) {
+      if (response.ok) {
+        const data = await response.json();
         setSearchResults(data);
-      } else {
-        console.error("Search failed:", data.error || "Unknown error");
-        setSearchResults([]);
       }
     } catch (error) {
       console.error("Error searching:", error);
-      setSearchResults([]);
-    }
-  };
-
-  const handleResetLogs = async () => {
-    // Show notice card
-    setNoticeMessage("Resetting logs and creating backup...");
-
-    try {
-      const response = await fetch("/api/registrations", {
-        method: "DELETE",
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        await fetchRegistrations();
-        setSearchResults([]);
-        setSearchQuery("");
-        setNoticeMessage("");
-        setShowResetModal(false);
-        setResetConfirmText("");
-        setSuccessMessage(
-          `✅ Logs reset successfully! ${data.backup || ""}`
-        );
-        setTimeout(() => setSuccessMessage(""), 5000);
-      } else {
-        const error = await response.json();
-        setNoticeMessage("");
-        setShowResetModal(false);
-        setResetConfirmText("");
-        alert(`Failed to reset logs: ${error.error || "Unknown error"}`);
-      }
-    } catch (error) {
-      console.error("Error resetting logs:", error);
-      setNoticeMessage("");
-      setShowResetModal(false);
-      setResetConfirmText("");
-      alert("Failed to reset logs. Please try again.");
     }
   };
 
@@ -183,16 +141,29 @@ export default function Home() {
     setShowResetModal(true);
   };
 
-  const handleCancelReset = () => {
+  const handleResetLogs = async () => {
+    setNoticeMessage("Resetting all logs...");
     setShowResetModal(false);
     setResetConfirmText("");
-  };
 
-  const handleConfirmReset = () => {
-    if (resetConfirmText === "RESET") {
-      handleResetLogs();
-    } else {
-      alert("Please type 'RESET' to confirm.");
+    try {
+      const response = await fetch("/api/registrations", {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        await fetchRegistrations();
+        setNoticeMessage("");
+        setSuccessMessage("All logs have been reset successfully");
+        setTimeout(() => setSuccessMessage(""), 5000);
+      } else {
+        setNoticeMessage("");
+        alert("Failed to reset logs");
+      }
+    } catch (error) {
+      console.error("Error resetting logs:", error);
+      setNoticeMessage("");
+      alert("Failed to reset logs");
     }
   };
 
@@ -282,22 +253,6 @@ export default function Home() {
     }
   };
 
-  const availableNames = department
-    ? getStaffByDepartment(department).map((s) => s.name)
-    : [];
-
-  // Generate reference number based on format: MCMC (T) DIGD -3/2/2026/002
-  const generateReferenceNumber = () => {
-    if (!department || !mailingNumber) return "";
-
-    const deptCode = DEPARTMENT_CODES[department] || "0";
-    const typeCode = docType === "Memo" ? "2" : "1"; // 1 for Surat, 2 for Memo
-    const year = new Date().getFullYear();
-    const sequenceNumber = mailingNumber.padStart(3, "0");
-
-    return `MCMC (${fileSecurityCode}) DIGD -${deptCode}/${typeCode}/${year}/${sequenceNumber}`;
-  };
-
   return (
     <div className="min-h-screen p-8">
       <div className="max-w-7xl mx-auto">
@@ -311,625 +266,61 @@ export default function Home() {
           </p>
         </div>
 
+        <NoticeMessage message={noticeMessage} />
+
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* Register Number Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Register Number
-            </h2>
+          <RegistrationForm
+            onRegister={handleRegister}
+            nextNumber={nextNumber}
+            onGenerateNumber={handleAutoGenerate}
+            successMessage={successMessage}
+          />
 
-            {/* Success Message */}
-            {successMessage && (
-              <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded text-green-800 text-sm font-medium">
-                {successMessage}
-              </div>
-            )}
-
-            {/* Document Type Selection */}
-            <div className="mb-6 flex p-1 bg-gray-100 rounded-lg">
-              <button
-                onClick={() => setDocType("Surat")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${docType === "Surat"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Surat
-              </button>
-              <button
-                onClick={() => setDocType("Memo")}
-                className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${docType === "Memo"
-                    ? "bg-white text-blue-600 shadow-sm"
-                    : "text-gray-500 hover:text-gray-700"
-                  }`}
-              >
-                Memo
-              </button>
-            </div>
-
-            {/* Notice Message */}
-            {noticeMessage && (
-              <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded text-yellow-800 text-sm font-medium flex items-center gap-2">
-                <svg className="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                {noticeMessage}
-              </div>
-            )}
-
-            {/* Mailing Number */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mailing Number
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g., 0001"
-                  value={mailingNumber}
-                  onChange={(e) => setMailingNumber(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleAutoGenerate}
-                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
-                >
-                  Auto
-                </button>
-              </div>
-            </div>
-
-            {/* Department */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Department
-              </label>
-              <select
-                value={department}
-                onChange={(e) => handleDepartmentChange(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="">Select a department</option>
-                {DEPARTMENTS.map((dept) => (
-                  <option key={dept} value={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Name */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Name
-              </label>
-              <select
-                value={name}
-                onChange={(e) => handleNameChange(e.target.value)}
-                disabled={!department}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-              >
-                <option value="">Select a name</option>
-                {availableNames.map((n) => (
-                  <option key={n} value={n}>
-                    {n}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Staff ID */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Staff ID
-              </label>
-              <input
-                type="text"
-                value={staffId}
-                readOnly
-                className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
-              />
-            </div>
-
-            {/* File Security Code */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                File Security Code
-              </label>
-              <select
-                value={fileSecurityCode}
-                onChange={(e) => setFileSecurityCode(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {FILE_SECURITY_CODES.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Mailing Number */}
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Mailing Number
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="text"
-                  placeholder="e.g., 0001"
-                  value={mailingNumber}
-                  onChange={(e) => setMailingNumber(e.target.value)}
-                  className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-                <button
-                  onClick={handleAutoGenerate}
-                  className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
-                >
-                  Auto
-                </button>
-              </div>
-            </div>
-
-            {/* Reference Number Preview */}
-            {mailingNumber && department && (
-              <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded">
-                <label className="block text-sm font-medium text-blue-900 mb-2">
-                  Generated Reference Number
-                </label>
-                <div className="text-lg font-mono font-bold text-blue-700">
-                  {generateReferenceNumber()}
-                </div>
-                <div className="text-xs text-blue-600 mt-2">
-                  <div>Format: MCMC (T) DIGD -[Dept]/[Type]/[Year]/[Seq]</div>
-                  <div className="mt-1">
-                    <span className="font-semibold">Dept Code:</span> {DEPARTMENT_CODES[department]} •
-                    <span className="font-semibold ml-2">Type Code:</span> {docType === "Memo" ? "2" : "1"} (1=Surat, 2=Memo)
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Register Button */}
-            <button
-              onClick={handleRegister}
-              className="w-full py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
-            >
-              Register Number
-            </button>
-          </div>
-
-          {/* Quick Check Card */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Quick Check
-            </h2>
-
-            {/* Search */}
-            <div className="mb-6">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Search Number/Name/Department
-              </label>
-              <input
-                type="text"
-                placeholder="0001"
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Search Results */}
-            {searchResults && searchResults.length > 0 && (
-              <div className="mb-6 p-3 bg-gray-50 rounded border border-gray-200">
-                <h3 className="font-medium text-gray-900 mb-2">Search Results:</h3>
-                {searchResults.map((result) => (
-                  <div key={`${result.type}-${result.number}`} className="text-sm text-gray-700 mb-1">
-                    <span className={`inline-block px-1.5 py-0.5 rounded text-[10px] uppercase font-bold mr-2 ${result.type === 'Surat' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-                      }`}>
-                      {result.type}
-                    </span>
-                    Number: {result.number} - {result.name} ({result.department})
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Statistics */}
-            <div className="mb-6 p-4 bg-gray-50 rounded">
-              <div className="text-sm text-gray-600 mb-1">Statistics</div>
-              <div className="text-3xl font-bold text-blue-600">
-                {registrations.length}
-              </div>
-              <div className="text-sm text-gray-700">Total Registered Numbers</div>
-            </div>
-
-            {/* Next Available Number */}
-            <div className={`p-4 rounded border ${docType === 'Surat' ? 'bg-blue-50 border-blue-100' : 'bg-purple-50 border-purple-100'
-              }`}>
-              <div className="text-sm text-gray-700 mb-1">Next Available {docType} Number</div>
-              <div className={`text-3xl font-bold ${docType === 'Surat' ? 'text-blue-600' : 'text-purple-600'
-                }`}>{nextNumber}</div>
-            </div>
-          </div>
+          <QuickCheck
+            onSearch={handleSearch}
+            searchResults={searchResults}
+            totalCount={registrations.length}
+            nextNumber={nextNumber}
+            docType={docType}
+          />
         </div>
 
         {/* Registration Logs */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-gray-900">
-              Registration Logs
-            </h2>
-            <button
-              onClick={handleResetClick}
-              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors text-sm font-medium"
-            >
-              Reset Logs
-            </button>
-          </div>
-
-          {/* Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Type
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Seq. No.
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Reference Number
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Staff ID
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Name
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Department
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Registered At
-                  </th>
-                  <th className="text-left py-3 px-4 font-semibold text-gray-900">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {!Array.isArray(registrations) || registrations.length === 0 ? (
-                  <tr>
-                    <td
-                      colSpan={8}
-                      className="text-center py-8 text-gray-500"
-                    >
-                      No records found
-                    </td>
-                  </tr>
-                ) : (
-                  registrations.map((reg) => (
-                    <tr
-                      key={`${reg.type}-${reg.number}`}
-                      className="border-b border-gray-100 hover:bg-gray-50"
-                    >
-                      <td className="py-3 px-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${reg.type === 'Surat' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
-                          {reg.type}
-                        </span>
-                      </td>
-                      <td className="py-3 px-4 font-mono text-sm">{reg.number}</td>
-                      <td className="py-3 px-4 font-mono text-sm font-medium text-blue-600">
-                        {reg.referenceNumber || '-'}
-                      </td>
-                      <td className="py-3 px-4">{reg.staffId}</td>
-                      <td className="py-3 px-4">{reg.name}</td>
-                      <td className="py-3 px-4 text-sm">{reg.department}</td>
-                      <td className="py-3 px-4 text-sm">
-                        {new Date(reg.registeredAt).toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4">
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditClick(reg)}
-                            className="px-3 py-1 bg-blue-600 text-white rounded text-xs hover:bg-blue-700 transition-colors"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            onClick={() => handleDeleteClick(reg)}
-                            className="px-3 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700 transition-colors"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        <RegistrationLogsTable
+          registrations={registrations}
+          onEdit={handleEditClick}
+          onDelete={handleDeleteClick}
+          onReset={handleResetClick}
+        />
       </div>
 
-      {/* Double Confirmation Modal */}
-      {showResetModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              ⚠️ Confirm Reset
-            </h3>
-            <div className="mb-4">
-              <p className="text-gray-700 mb-2">
-                This action will <strong>delete all registration logs</strong>.
-              </p>
-              <p className="text-gray-700 mb-4">
-                A backup will be created automatically before deletion.
-              </p>
-              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
-                <p className="text-sm text-yellow-800 font-medium">
-                  To confirm, please type <span className="font-bold">RESET</span> below:
-                </p>
-              </div>
-              <input
-                type="text"
-                value={resetConfirmText}
-                onChange={(e) => setResetConfirmText(e.target.value)}
-                placeholder="Type RESET to confirm"
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-red-500"
-                autoFocus
-              />
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelReset}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmReset}
-                disabled={resetConfirmText !== "RESET"}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium disabled:bg-gray-400 disabled:cursor-not-allowed"
-              >
-                Confirm Reset
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Modals */}
+      <ResetConfirmationModal
+        isOpen={showResetModal}
+        onClose={() => {
+          setShowResetModal(false);
+          setResetConfirmText("");
+        }}
+        onConfirm={handleResetLogs}
+        confirmText={resetConfirmText}
+        setConfirmText={setResetConfirmText}
+      />
 
-      {/* Edit Modal */}
-      {showEditModal && editingRegistration && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              Edit Registration
-            </h3>
-            <div className="mb-4">
-              {/* Document Type */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Document Type
-                </label>
-                <select
-                  value={editingRegistration.type}
-                  onChange={(e) =>
-                    setEditingRegistration({
-                      ...editingRegistration,
-                      type: e.target.value as 'Surat' | 'Memo',
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="Surat">Surat</option>
-                  <option value="Memo">Memo</option>
-                </select>
-              </div>
+      <EditRegistrationModal
+        isOpen={showEditModal}
+        onClose={handleCancelEdit}
+        onConfirm={handleConfirmEdit}
+        registration={editingRegistration}
+        setRegistration={setEditingRegistration}
+      />
 
-              {/* Number */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number
-                </label>
-                <input
-                  type="text"
-                  value={editingRegistration.number}
-                  onChange={(e) =>
-                    setEditingRegistration({
-                      ...editingRegistration,
-                      number: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                />
-              </div>
-
-              {/* File Security Code */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  File Security Code
-                </label>
-                <select
-                  value={editingRegistration.fileSecurityCode || "T"}
-                  onChange={(e) =>
-                    setEditingRegistration({
-                      ...editingRegistration,
-                      fileSecurityCode: e.target.value,
-                    })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {FILE_SECURITY_CODES.map((item) => (
-                    <option key={item.code} value={item.code}>
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Department */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Department
-                </label>
-                <select
-                  value={editingRegistration.department}
-                  onChange={(e) => {
-                    setEditingRegistration({
-                      ...editingRegistration,
-                      department: e.target.value,
-                      name: "",
-                      staffId: "",
-                    });
-                  }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select a department</option>
-                  {DEPARTMENTS.map((dept) => (
-                    <option key={dept} value={dept}>
-                      {dept}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Name */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Name
-                </label>
-                <select
-                  value={editingRegistration.name}
-                  onChange={(e) => {
-                    const selectedName = e.target.value;
-                    const staff = staffDatabase.find(
-                      (s) =>
-                        s.name === selectedName &&
-                        s.department === editingRegistration.department
-                    );
-                    setEditingRegistration({
-                      ...editingRegistration,
-                      name: selectedName,
-                      staffId: staff?.id || "",
-                    });
-                  }}
-                  disabled={!editingRegistration.department}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-                >
-                  <option value="">Select a name</option>
-                  {editingRegistration.department &&
-                    getStaffByDepartment(editingRegistration.department).map(
-                      (s) => (
-                        <option key={s.name} value={s.name}>
-                          {s.name}
-                        </option>
-                      )
-                    )}
-                </select>
-              </div>
-
-              {/* Staff ID */}
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Staff ID
-                </label>
-                <input
-                  type="text"
-                  value={editingRegistration.staffId}
-                  readOnly
-                  className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
-                />
-              </div>
-
-              {/* Reference Number Preview */}
-              {editingRegistration.number && editingRegistration.department && (
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                  <label className="block text-xs font-medium text-blue-900 mb-1">
-                    Updated Reference Number
-                  </label>
-                  <div className="text-sm font-mono font-bold text-blue-700">
-                    {`MCMC (${editingRegistration.fileSecurityCode || "T"}) DIGD -${DEPARTMENT_CODES[editingRegistration.department]}/${editingRegistration.type === "Memo" ? "2" : "1"}/${new Date().getFullYear()}/${editingRegistration.number.padStart(3, "0")}`}
-                  </div>
-                </div>
-              )}
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelEdit}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmEdit}
-                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors font-medium"
-              >
-                Save Changes
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && deletingRegistration && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">
-              ⚠️ Confirm Delete
-            </h3>
-            <div className="mb-4">
-              <p className="text-gray-700 mb-2">
-                Are you sure you want to delete this registration?
-              </p>
-              <div className="bg-gray-50 border border-gray-200 rounded p-3 mb-4">
-                <div className="text-sm text-gray-700">
-                  <div className="mb-1">
-                    <span className="font-semibold">Type:</span>{" "}
-                    {deletingRegistration.type}
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-semibold">Number:</span>{" "}
-                    {deletingRegistration.number}
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-semibold">Name:</span>{" "}
-                    {deletingRegistration.name}
-                  </div>
-                  <div className="mb-1">
-                    <span className="font-semibold">Department:</span>{" "}
-                    {deletingRegistration.department}
-                  </div>
-                </div>
-              </div>
-              <p className="text-sm text-red-600 font-medium">
-                This action cannot be undone.
-              </p>
-            </div>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={handleCancelDelete}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors font-medium"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal}
+        onClose={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        registration={deletingRegistration}
+      />
     </div>
   );
 }

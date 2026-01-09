@@ -5,12 +5,12 @@ import { supabase } from "@/lib/supabase";
 // PATCH - Update a specific registration
 export async function PATCH(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
         const body = await request.json();
         const { number, type, fileSecurityCode, staffId, name, department, referenceNumber } = body;
-        const id = params.id;
+        const { id } = await params;
 
         if (!number || !type || !staffId || !name || !department) {
             return NextResponse.json(
@@ -70,10 +70,10 @@ export async function PATCH(
 // DELETE - Delete a specific registration
 export async function DELETE(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const id = params.id;
+        const { id } = await params;
 
         const { error } = await supabase
             .from("registrations")
