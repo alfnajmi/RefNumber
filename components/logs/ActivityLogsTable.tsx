@@ -11,7 +11,7 @@ interface ActivityLogsTableProps {
 export default function ActivityLogsTable({ activityLogs }: ActivityLogsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
-  const itemsPerPage = 10;
+  const itemsPerPage = 5;
 
   // Filter activity logs based on search query
   const filteredLogs = activityLogs.filter((log) => {

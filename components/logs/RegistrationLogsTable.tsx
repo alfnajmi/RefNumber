@@ -62,12 +62,12 @@ export default function RegistrationLogsTable({
             Registration Logs
           </h2>
         </div>
-        <button
+        {/* <button
           onClick={onReset}
           className="px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg text-sm font-medium hover:from-red-600 hover:to-red-700 transition-all duration-200 shadow-md hover:shadow-lg"
         >
           Reset All Logs
-        </button>
+        </button> */}
       </div>
 
       {/* Search Bar */}
