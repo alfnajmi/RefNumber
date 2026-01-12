@@ -11,12 +11,14 @@ import ResetConfirmationModal from "@/components/modals/ResetConfirmationModal";
 import EditRegistrationModal from "@/components/modals/EditRegistrationModal";
 import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal";
 import NoticeMessage from "@/components/ui/NoticeMessage";
+import CustomNotification from "@/components/ui/CustomNotification";
 
 export default function Home() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [searchResults, setSearchResults] = useState<Registration[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
@@ -163,11 +165,11 @@ export default function Home() {
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to register number");
+        setErrorMessage(error.error || "Failed to register number");
       }
     } catch (error) {
       console.error("Error registering:", error);
-      alert("Failed to register number");
+      setErrorMessage("Failed to register number");
     }
   };
 
@@ -209,12 +211,12 @@ export default function Home() {
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         setNoticeMessage("");
-        alert("Failed to reset logs");
+        setErrorMessage("Failed to reset logs");
       }
     } catch (error) {
       console.error("Error resetting logs:", error);
       setNoticeMessage("");
-      alert("Failed to reset logs");
+      setErrorMessage("Failed to reset logs");
     }
   };
 
@@ -273,11 +275,11 @@ export default function Home() {
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to update registration");
+        setErrorMessage(error.error || "Failed to update registration");
       }
     } catch (error) {
       console.error("Error updating registration:", error);
-      alert("Failed to update registration");
+      setErrorMessage("Failed to update registration");
     }
   };
 
@@ -314,24 +316,29 @@ export default function Home() {
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         const error = await response.json();
-        alert(error.error || "Failed to delete registration");
+        setErrorMessage(error.error || "Failed to delete registration");
       }
     } catch (error) {
       console.error("Error deleting registration:", error);
-      alert("Failed to delete registration");
+      setErrorMessage("Failed to delete registration");
     }
   };
 
   return (
-    <div className="min-h-screen p-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-8 text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
+            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
             Mailing Number System
           </h1>
-          <p className="text-gray-600">
-            Manage and track mailing numbers for your division
+          <p className="text-gray-600 text-lg">
+            Manage and track mailing numbers for MCMC DIGD
           </p>
         </div>
 
@@ -392,6 +399,25 @@ export default function Home() {
         onClose={handleCancelDelete}
         onConfirm={handleConfirmDelete}
         registration={deletingRegistration}
+      />
+
+      {/* Custom Notifications */}
+      <CustomNotification
+        message={successMessage}
+        type="success"
+        isOpen={!!successMessage}
+        onClose={() => setSuccessMessage("")}
+        autoClose={true}
+        duration={3000}
+      />
+
+      <CustomNotification
+        message={errorMessage}
+        type="error"
+        isOpen={!!errorMessage}
+        onClose={() => setErrorMessage("")}
+        autoClose={true}
+        duration={4000}
       />
     </div>
   );
