@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Registration } from "@/types";
+import { Registration, ActivityLog } from "@/types";
 import { DEPARTMENT_CODES } from "@/types";
 import RegistrationForm from "@/components/registration/RegistrationForm";
 import QuickCheck from "@/components/quick-check/QuickCheck";
 import RegistrationLogsTable from "@/components/logs/RegistrationLogsTable";
+import ActivityLogsTable from "@/components/logs/ActivityLogsTable";
 import ResetConfirmationModal from "@/components/modals/ResetConfirmationModal";
 import EditRegistrationModal from "@/components/modals/EditRegistrationModal";
 import DeleteConfirmationModal from "@/components/modals/DeleteConfirmationModal";
@@ -13,6 +14,7 @@ import NoticeMessage from "@/components/ui/NoticeMessage";
 
 export default function Home() {
   const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [searchResults, setSearchResults] = useState<Registration[]>([]);
   const [successMessage, setSuccessMessage] = useState("");
   const [noticeMessage, setNoticeMessage] = useState("");
@@ -24,31 +26,45 @@ export default function Home() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deletingRegistration, setDeletingRegistration] = useState<Registration | null>(null);
 
-  // Fetch registrations on mount
+  // Fetch registrations and activity logs on mount
   useEffect(() => {
     let isMounted = true;
 
-    const loadRegistrations = async () => {
+    const loadData = async () => {
       try {
-        const response = await fetch("/api/registrations");
-        const data = await response.json();
+        const [regResponse, logsResponse] = await Promise.all([
+          fetch("/api/registrations"),
+          fetch("/api/activity-logs")
+        ]);
+
+        const regData = await regResponse.json();
+        const logsData = await logsResponse.json();
+
         if (isMounted) {
-          if (response.ok && Array.isArray(data)) {
-            setRegistrations(data);
+          if (regResponse.ok && Array.isArray(regData)) {
+            setRegistrations(regData);
           } else {
-            console.error("Failed to fetch registrations:", data.error || "Unknown error");
+            console.error("Failed to fetch registrations:", regData.error || "Unknown error");
             setRegistrations([]);
+          }
+
+          if (logsResponse.ok && Array.isArray(logsData)) {
+            setActivityLogs(logsData);
+          } else {
+            console.error("Failed to fetch activity logs:", logsData.error || "Unknown error");
+            setActivityLogs([]);
           }
         }
       } catch (error) {
         if (isMounted) {
-          console.error("Error fetching registrations:", error);
+          console.error("Error fetching data:", error);
           setRegistrations([]);
+          setActivityLogs([]);
         }
       }
     };
 
-    loadRegistrations();
+    loadData();
 
     return () => {
       isMounted = false;
@@ -68,6 +84,22 @@ export default function Home() {
     } catch (error) {
       console.error("Error fetching registrations:", error);
       setRegistrations([]);
+    }
+  };
+
+  const fetchActivityLogs = async () => {
+    try {
+      const response = await fetch("/api/activity-logs");
+      const data = await response.json();
+      if (response.ok && Array.isArray(data)) {
+        setActivityLogs(data);
+      } else {
+        console.error("Failed to fetch activity logs:", data.error || "Unknown error");
+        setActivityLogs([]);
+      }
+    } catch (error) {
+      console.error("Error fetching activity logs:", error);
+      setActivityLogs([]);
     }
   };
 
@@ -106,10 +138,28 @@ export default function Home() {
 
       if (response.ok) {
         const newReg = await response.json();
+
+        // Log the create activity
+        await fetch("/api/activity-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "create",
+            registrationNumber: data.number,
+            registrationType: data.type,
+            staffId: data.staffId,
+            staffName: data.name,
+            department: data.department,
+            referenceNumber: data.referenceNumber,
+            performedBy: "System",
+          }),
+        });
+
         setSuccessMessage(
           `Number ${newReg.number} successfully registered to ${newReg.name} (Staff ID: ${newReg.staffId})`
         );
         await fetchRegistrations();
+        await fetchActivityLogs();
         setTimeout(() => setSuccessMessage(""), 5000);
       } else {
         const error = await response.json();
@@ -240,7 +290,24 @@ export default function Home() {
       });
 
       if (response.ok) {
+        // Log the delete activity
+        await fetch("/api/activity-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            action: "delete",
+            registrationNumber: deletingRegistration.number,
+            registrationType: deletingRegistration.type,
+            staffId: deletingRegistration.staffId,
+            staffName: deletingRegistration.name,
+            department: deletingRegistration.department,
+            referenceNumber: deletingRegistration.referenceNumber,
+            performedBy: "System",
+          }),
+        });
+
         await fetchRegistrations();
+        await fetchActivityLogs();
         setShowDeleteModal(false);
         setDeletingRegistration(null);
         setSuccessMessage("Registration deleted successfully");
@@ -295,6 +362,9 @@ export default function Home() {
           onDelete={handleDeleteClick}
           onReset={handleResetClick}
         />
+
+        {/* Activity Logs */}
+        <ActivityLogsTable activityLogs={activityLogs} />
       </div>
 
       {/* Modals */}

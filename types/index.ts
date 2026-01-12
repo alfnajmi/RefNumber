@@ -19,6 +19,20 @@ export interface Registration {
   registeredAt: string;
 }
 
+// Activity Log interface
+export interface ActivityLog {
+  id: string;
+  action: 'create' | 'delete';
+  registrationNumber: string;
+  registrationType: 'Surat' | 'Memo';
+  staffId: string;
+  staffName: string;
+  department: string;
+  referenceNumber?: string;
+  performedBy: string;
+  createdAt: string;
+}
+
 // Departments enum
 export const DEPARTMENTS = [
   "Geospatial and Data management Division",

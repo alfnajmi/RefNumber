@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { Registration } from "@/types";
+import Pagination from "@/components/ui/Pagination";
 
 interface RegistrationLogsTableProps {
   registrations: Registration[];
@@ -15,6 +17,18 @@ export default function RegistrationLogsTable({
   onDelete,
   onReset,
 }: RegistrationLogsTableProps) {
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
+  const totalPages = Math.ceil(registrations.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentItems = registrations.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* <div className="flex justify-between items-center mb-4">
@@ -74,7 +88,7 @@ export default function RegistrationLogsTable({
                 </td>
               </tr>
             ) : (
-              registrations.map((reg) => (
+              currentItems.map((reg) => (
                 <tr
                   key={`${reg.type}-${reg.number}`}
                   className="border-b border-gray-100 hover:bg-gray-50"
@@ -119,6 +133,14 @@ export default function RegistrationLogsTable({
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+        totalItems={registrations.length}
+        itemsPerPage={itemsPerPage}
+      />
     </div>
   );
 }
