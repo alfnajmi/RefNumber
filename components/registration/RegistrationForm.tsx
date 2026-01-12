@@ -96,10 +96,17 @@ export default function RegistrationForm({
     : [];
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <h2 className="text-xl font-semibold text-gray-900 mb-4">
-        Register Number
-      </h2>
+    <div className="bg-white rounded-2xl shadow-lg border border-blue-100 p-6 hover:shadow-xl transition-shadow duration-300">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg shadow-md">
+          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900">
+          Register Number
+        </h2>
+      </div>
 
       <SuccessMessage message={successMessage} />
 
@@ -107,13 +114,13 @@ export default function RegistrationForm({
 
       {/* Department */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Department
         </label>
         <select
           value={department}
           onChange={(e) => handleDepartmentChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-300"
         >
           <option value="">Select a department</option>
           {DEPARTMENTS.map((dept) => (
@@ -126,14 +133,14 @@ export default function RegistrationForm({
 
       {/* Name */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Name
         </label>
         <select
           value={name}
           onChange={(e) => handleNameChange(e.target.value)}
           disabled={!department}
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-300 disabled:bg-gray-50 disabled:cursor-not-allowed"
         >
           <option value="">Select a name</option>
           {availableNames.map((n) => (
@@ -146,14 +153,14 @@ export default function RegistrationForm({
 
       {/* Staff ID */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Staff ID
         </label>
         <input
           type="text"
           value={staffId}
           readOnly
-          className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg bg-gradient-to-r from-gray-50 to-blue-50 font-mono text-gray-600"
         />
       </div>
 
@@ -175,7 +182,7 @@ export default function RegistrationForm({
 
       {/* Mailing Number */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Mailing Number
         </label>
         <div className="flex gap-2">
@@ -184,11 +191,11 @@ export default function RegistrationForm({
             placeholder="e.g., 0001"
             value={mailingNumber}
             onChange={(e) => setMailingNumber(e.target.value)}
-            className="flex-1 px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-300 font-mono"
           />
           <button
             onClick={() => setMailingNumber(onGenerateNumber())}
-            className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-800 transition-colors"
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
           >
             Auto
           </button>
@@ -196,7 +203,7 @@ export default function RegistrationForm({
       </div>
             {/* Document Title */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2">
+        <label className="block text-sm font-semibold text-gray-700 mb-2">
           Document Title
         </label>
         <input
@@ -204,7 +211,7 @@ export default function RegistrationForm({
           placeholder="Enter document title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-300"
         />
       </div>
 
@@ -219,7 +226,7 @@ export default function RegistrationForm({
       {/* Register Button */}
       <button
         onClick={handleSubmit}
-        className="w-full py-3 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
+        className="w-full py-3.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-semibold hover:from-blue-600 hover:to-blue-700 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02] active:scale-[0.98]"
       >
         Register Number
       </button>
