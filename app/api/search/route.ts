@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
             staffId: reg.staff_id,
             name: reg.name,
             department: reg.department,
+            title: reg.title,
             registeredAt: reg.registered_at,
         }));
 

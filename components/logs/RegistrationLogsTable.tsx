@@ -53,6 +53,9 @@ export default function RegistrationLogsTable({
                 Department
               </th>
               <th className="text-left py-3 px-4 font-semibold text-gray-900">
+                Title
+              </th>
+              <th className="text-left py-3 px-4 font-semibold text-gray-900">
                 Registered At
               </th>
               <th className="text-left py-3 px-4 font-semibold text-gray-900">
@@ -64,7 +67,7 @@ export default function RegistrationLogsTable({
             {!Array.isArray(registrations) || registrations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={8}
+                  colSpan={9}
                   className="text-center py-8 text-gray-500"
                 >
                   No records found
@@ -90,6 +93,7 @@ export default function RegistrationLogsTable({
                   <td className="py-3 px-4">{reg.staffId}</td>
                   <td className="py-3 px-4">{reg.name}</td>
                   <td className="py-3 px-4 text-sm">{reg.department}</td>
+                  <td className="py-3 px-4 text-sm">{reg.title}</td>
                   <td className="py-3 px-4 text-sm">
                     {new Date(reg.registeredAt).toLocaleString()}
                   </td>
