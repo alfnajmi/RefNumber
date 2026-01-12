@@ -6,7 +6,7 @@ import { Registration } from "@/types";
 interface DeleteConfirmationModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onConfirm: () => void;
+  onConfirm: (remarks: string) => void;
   registration: Registration | null;
 }
 
@@ -17,13 +17,15 @@ export default function DeleteConfirmationModal({
   registration,
 }: DeleteConfirmationModalProps) {
   const [confirmText, setConfirmText] = useState("");
+  const [remarks, setRemarks] = useState("");
 
   if (!isOpen || !registration) return null;
 
   const handleConfirm = () => {
     if (confirmText === "DELETE") {
-      onConfirm();
+      onConfirm(remarks);
       setConfirmText("");
+      setRemarks("");
     } else {
       alert("Please type 'DELETE' to confirm.");
     }
@@ -31,11 +33,12 @@ export default function DeleteConfirmationModal({
 
   const handleClose = () => {
     setConfirmText("");
+    setRemarks("");
     onClose();
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white rounded-lg shadow-xl p-6 max-w-md w-full mx-4">
         <h3 className="text-xl font-bold text-gray-900 mb-4">
           ⚠️ Confirm Delete
@@ -67,6 +70,16 @@ export default function DeleteConfirmationModal({
           <p className="text-sm text-red-600 font-medium mb-4">
             This action cannot be undone.
           </p>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Remarks (optional):
+          </label>
+          <textarea
+            value={remarks}
+            onChange={(e) => setRemarks(e.target.value)}
+            placeholder="Enter reason for deletion..."
+            rows={3}
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none"
+          />
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Type <span className="font-bold">DELETE</span> to confirm:
           </label>
