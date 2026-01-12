@@ -157,7 +157,7 @@ export default function RegistrationForm({
         />
       </div>
 
-      {/* Document Title */}
+      {/* Document Title
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-2">
           Document Title
@@ -169,7 +169,7 @@ export default function RegistrationForm({
           onChange={(e) => setTitle(e.target.value)}
           className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-      </div>
+      </div> */}
 
       <FileSecurityCodeSelect value={fileSecurityCode} onChange={setFileSecurityCode} />
 
@@ -193,6 +193,19 @@ export default function RegistrationForm({
             Auto
           </button>
         </div>
+      </div>
+            {/* Document Title */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Document Title
+        </label>
+        <input
+          type="text"
+          placeholder="Enter document title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
       </div>
 
       <ReferenceNumberPreview
