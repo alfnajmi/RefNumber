@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import Image from "next/image";
 import { Registration, ActivityLog } from "@/types";
 import { DEPARTMENT_CODES } from "@/types";
 import RegistrationForm from "@/components/registration/RegistrationForm";
@@ -330,16 +331,21 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/Gemini_Generated_Image_dq1ktcdq1ktcdq1k-removebg-preview.png"
+              alt="DIGD Logo"
+              width={300}
+              height={300}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-            Mailing Number System
+            DIGD Document Tracking System (DDTS)
           </h1>
           <p className="text-gray-600 text-lg">
-            Manage and track mailing numbers for MCMC DIGD
+            Manage and track document numbers for MCMC DIGD
           </p>
         </div>
 
@@ -372,7 +378,7 @@ export default function Home() {
         />
 
         {/* Activity Logs */}
-        <ActivityLogsTable activityLogs={activityLogs} />
+        {/* <ActivityLogsTable activityLogs={activityLogs} /> */}
       </div>
 
       {/* Modals */}

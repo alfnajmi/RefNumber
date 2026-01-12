@@ -1,7 +1,7 @@
 # UI Improvements Summary
 
 ## Overview
-The Mailing Number System UI has been completely redesigned with a modern blue and white color scheme, featuring gradients, improved typography, and enhanced user experience.
+The DIGD Document Tracking System (DDTS) UI has been completely redesigned with a modern blue and white color scheme, featuring gradients, improved typography, and enhanced user experience.
 
 ## Color Scheme
 - **Primary Colors**: Blue gradient (from-blue-500 to-blue-600)
