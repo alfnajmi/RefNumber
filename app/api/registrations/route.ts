@@ -21,6 +21,7 @@ export async function GET() {
             staffId: reg.staff_id,
             name: reg.name,
             department: reg.department,
+            title: reg.title,
             referenceNumber: reg.reference_number,
             registeredAt: reg.registered_at,
         }));
@@ -39,9 +40,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const { number, type, fileSecurityCode, staffId, name, department, referenceNumber } = body;
+        const { number, type, fileSecurityCode, staffId, name, department, title, referenceNumber } = body;
 
-        if (!number || !type || !staffId || !name || !department) {
+        if (!number || !type || !staffId || !name || !department || !title) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -59,6 +60,7 @@ export async function POST(request: NextRequest) {
                     staff_id: staffId,
                     name,
                     department,
+                    title,
                     reference_number: referenceNumber,
                 },
             ])
@@ -83,6 +85,7 @@ export async function POST(request: NextRequest) {
             staffId: data.staff_id,
             name: data.name,
             department: data.department,
+            title: data.title,
             referenceNumber: data.reference_number,
             registeredAt: data.registered_at,
         };

@@ -14,6 +14,7 @@ export interface Registration {
   staffId: string;
   name: string;
   department: string;
+  title: string;
   referenceNumber?: string;
   registeredAt: string;
 }

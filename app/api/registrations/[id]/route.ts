@@ -9,10 +9,10 @@ export async function PATCH(
 ) {
     try {
         const body = await request.json();
-        const { number, type, fileSecurityCode, staffId, name, department, referenceNumber } = body;
+        const { number, type, fileSecurityCode, staffId, name, department, title, referenceNumber } = body;
         const { id } = await params;
 
-        if (!number || !type || !staffId || !name || !department) {
+        if (!number || !type || !staffId || !name || !department || !title) {
             return NextResponse.json(
                 { error: "Missing required fields" },
                 { status: 400 }
@@ -29,6 +29,7 @@ export async function PATCH(
                 staff_id: staffId,
                 name,
                 department,
+                title,
                 reference_number: referenceNumber,
             })
             .eq("id", id)
@@ -53,6 +54,7 @@ export async function PATCH(
             staffId: data.staff_id,
             name: data.name,
             department: data.department,
+            title: data.title,
             referenceNumber: data.reference_number,
             registeredAt: data.registered_at,
         };

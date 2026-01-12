@@ -16,6 +16,7 @@ interface RegistrationFormProps {
     staffId: string;
     name: string;
     department: string;
+    title: string;
     referenceNumber: string;
   }) => Promise<void>;
   nextNumber: string;
@@ -33,6 +34,7 @@ export default function RegistrationForm({
   const [department, setDepartment] = useState("");
   const [name, setName] = useState("");
   const [staffId, setStaffId] = useState("");
+  const [title, setTitle] = useState("");
   const [fileSecurityCode, setFileSecurityCode] = useState("T");
   const [docType, setDocType] = useState<'Surat' | 'Memo'>("Surat");
 
@@ -62,7 +64,7 @@ export default function RegistrationForm({
   };
 
   const handleSubmit = async () => {
-    if (!mailingNumber || !department || !name || !staffId) {
+    if (!mailingNumber || !department || !name || !staffId || !title) {
       alert("Please fill in all fields");
       return;
     }
@@ -76,6 +78,7 @@ export default function RegistrationForm({
       staffId,
       name,
       department,
+      title,
       referenceNumber,
     });
 
@@ -84,6 +87,7 @@ export default function RegistrationForm({
     setDepartment("");
     setName("");
     setStaffId("");
+    setTitle("");
     setFileSecurityCode("T");
   };
 
@@ -150,6 +154,20 @@ export default function RegistrationForm({
           value={staffId}
           readOnly
           className="w-full px-3 py-2 border border-gray-300 rounded bg-gray-50"
+        />
+      </div>
+
+      {/* Document Title */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          Document Title
+        </label>
+        <input
+          type="text"
+          placeholder="Enter document title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
 

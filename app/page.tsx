@@ -94,6 +94,7 @@ export default function Home() {
     staffId: string;
     name: string;
     department: string;
+    title: string;
     referenceNumber: string;
   }) => {
     try {
@@ -209,6 +210,7 @@ export default function Home() {
           staffId: editingRegistration.staffId,
           name: editingRegistration.name,
           department: editingRegistration.department,
+          title: editingRegistration.title,
           referenceNumber,
         }),
       });
