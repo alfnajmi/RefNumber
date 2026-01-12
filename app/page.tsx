@@ -283,7 +283,7 @@ export default function Home() {
     }
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (remarks: string) => {
     if (!deletingRegistration || !deletingRegistration.id) return;
 
     try {
@@ -305,6 +305,7 @@ export default function Home() {
             department: deletingRegistration.department,
             referenceNumber: deletingRegistration.referenceNumber,
             performedBy: "System",
+            remarks: remarks || undefined,
           }),
         });
 

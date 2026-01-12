@@ -24,6 +24,7 @@ export async function GET() {
       department: log.department,
       referenceNumber: log.reference_number,
       performedBy: log.performed_by,
+      remarks: log.remarks,
       createdAt: log.created_at,
     }));
 
@@ -50,6 +51,7 @@ export async function POST(request: NextRequest) {
       department,
       referenceNumber,
       performedBy = "System",
+      remarks,
     } = body;
 
     if (!action || !registrationNumber || !registrationType || !staffId || !staffName || !department) {
@@ -72,6 +74,7 @@ export async function POST(request: NextRequest) {
           department,
           reference_number: referenceNumber,
           performed_by: performedBy,
+          remarks,
         },
       ])
       .select()
@@ -89,6 +92,7 @@ export async function POST(request: NextRequest) {
       department: data.department,
       referenceNumber: data.reference_number,
       performedBy: data.performed_by,
+      remarks: data.remarks,
       createdAt: data.created_at,
     };
 

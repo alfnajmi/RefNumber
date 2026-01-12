@@ -10,15 +10,36 @@ interface ActivityLogsTableProps {
 
 export default function ActivityLogsTable({ activityLogs }: ActivityLogsTableProps) {
   const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
   const itemsPerPage = 10;
 
-  const totalPages = Math.ceil(activityLogs.length / itemsPerPage);
+  // Filter activity logs based on search query
+  const filteredLogs = activityLogs.filter((log) => {
+    const query = searchQuery.toLowerCase();
+    return (
+      log.action.toLowerCase().includes(query) ||
+      log.registrationNumber.toLowerCase().includes(query) ||
+      log.registrationType.toLowerCase().includes(query) ||
+      log.staffName.toLowerCase().includes(query) ||
+      log.staffId.toLowerCase().includes(query) ||
+      log.department.toLowerCase().includes(query) ||
+      (log.referenceNumber && log.referenceNumber.toLowerCase().includes(query)) ||
+      (log.remarks && log.remarks.toLowerCase().includes(query))
+    );
+  });
+
+  const totalPages = Math.ceil(filteredLogs.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentItems = activityLogs.slice(startIndex, endIndex);
+  const currentItems = filteredLogs.slice(startIndex, endIndex);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchQuery(e.target.value);
+    setCurrentPage(1); // Reset to first page when searching
   };
 
   return (
@@ -32,6 +53,45 @@ export default function ActivityLogsTable({ activityLogs }: ActivityLogsTablePro
         <h2 className="text-xl font-bold text-gray-900">
           Activity Logs
         </h2>
+      </div>
+
+      {/* Search Bar */}
+      <div className="mb-4">
+        <div className="relative">
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearchChange}
+            placeholder="Search by action, number, type, staff name, staff ID, department, reference number, or remarks..."
+            className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          />
+          <svg
+            className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+          </svg>
+          {searchQuery && (
+            <button
+              onClick={() => {
+                setSearchQuery("");
+                setCurrentPage(1);
+              }}
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          )}
+        </div>
+        {searchQuery && (
+          <p className="mt-2 text-sm text-gray-600">
+            Found {filteredLogs.length} result{filteredLogs.length !== 1 ? 's' : ''}
+          </p>
+        )}
       </div>
 
       {/* Table */}
@@ -58,6 +118,9 @@ export default function ActivityLogsTable({ activityLogs }: ActivityLogsTablePro
                 Department
               </th>
               <th className="text-left py-4 px-4 font-bold text-blue-900 text-sm">
+                Remarks
+              </th>
+              <th className="text-left py-4 px-4 font-bold text-blue-900 text-sm">
                 Timestamp
               </th>
             </tr>
@@ -66,10 +129,19 @@ export default function ActivityLogsTable({ activityLogs }: ActivityLogsTablePro
             {!Array.isArray(activityLogs) || activityLogs.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={8}
                   className="text-center py-8 text-gray-500"
                 >
                   No activity logs found
+                </td>
+              </tr>
+            ) : filteredLogs.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={8}
+                  className="text-center py-8 text-gray-500"
+                >
+                  No results match your search
                 </td>
               </tr>
             ) : (
@@ -105,6 +177,13 @@ export default function ActivityLogsTable({ activityLogs }: ActivityLogsTablePro
                   <td className="py-3 px-4 text-sm">{log.staffName}</td>
                   <td className="py-3 px-4 text-sm">{log.department}</td>
                   <td className="py-3 px-4 text-sm">
+                    {log.remarks ? (
+                      <span className="text-gray-700 italic">{log.remarks}</span>
+                    ) : (
+                      <span className="text-gray-400">-</span>
+                    )}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
                     {new Date(log.createdAt).toLocaleString()}
                   </td>
                 </tr>
@@ -114,13 +193,15 @@ export default function ActivityLogsTable({ activityLogs }: ActivityLogsTablePro
         </table>
       </div>
 
-      <Pagination
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={handlePageChange}
-        totalItems={activityLogs.length}
-        itemsPerPage={itemsPerPage}
-      />
+      {filteredLogs.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+          totalItems={filteredLogs.length}
+          itemsPerPage={itemsPerPage}
+        />
+      )}
     </div>
   );
 }

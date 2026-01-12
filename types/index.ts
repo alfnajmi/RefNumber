@@ -30,6 +30,7 @@ export interface ActivityLog {
   department: string;
   referenceNumber?: string;
   performedBy: string;
+  remarks?: string;
   createdAt: string;
 }
 
