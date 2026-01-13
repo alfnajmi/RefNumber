@@ -1,8 +1,24 @@
 "use client";
 
 import { useState } from "react";
-import { Registration } from "@/types";
+import { Registration, DocumentType } from "@/types";
 import Pagination from "@/components/ui/Pagination";
+
+// Helper function to get badge color based on document type
+const getTypeBadgeColor = (type: DocumentType): string => {
+  switch (type) {
+    case 'Letter':
+      return 'bg-blue-100 text-blue-800';
+    case 'Memo':
+      return 'bg-purple-100 text-purple-800';
+    case 'Minister Minutes':
+      return 'bg-green-100 text-green-800';
+    case 'Dictionary':
+      return 'bg-orange-100 text-orange-800';
+    default:
+      return 'bg-gray-100 text-gray-800';
+  }
+};
 
 interface RegistrationLogsTableProps {
   registrations: Registration[];
@@ -27,7 +43,6 @@ export default function RegistrationLogsTable({
     return (
       reg.number.toLowerCase().includes(query) ||
       reg.name.toLowerCase().includes(query) ||
-      reg.staffId.toLowerCase().includes(query) ||
       reg.department.toLowerCase().includes(query) ||
       reg.type.toLowerCase().includes(query) ||
       (reg.referenceNumber && reg.referenceNumber.toLowerCase().includes(query)) ||
@@ -77,7 +92,7 @@ export default function RegistrationLogsTable({
             type="text"
             value={searchQuery}
             onChange={handleSearchChange}
-            placeholder="Search by number, name, staff ID, department, type, reference number, or title..."
+            placeholder="Search by number, name, department, type, reference number, or title..."
             className="w-full px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
           <svg
@@ -124,9 +139,6 @@ export default function RegistrationLogsTable({
                 Reference Number
               </th>
               <th className="text-left py-4 px-4 font-bold text-blue-900 text-sm">
-                Staff ID
-              </th>
-              <th className="text-left py-4 px-4 font-bold text-blue-900 text-sm">
                 Name
               </th>
               <th className="text-left py-4 px-4 font-bold text-blue-900 text-sm">
@@ -147,7 +159,7 @@ export default function RegistrationLogsTable({
             {!Array.isArray(registrations) || registrations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={8}
                   className="text-center py-8 text-gray-500"
                 >
                   No records found
@@ -156,7 +168,7 @@ export default function RegistrationLogsTable({
             ) : filteredRegistrations.length === 0 ? (
               <tr>
                 <td
-                  colSpan={9}
+                  colSpan={8}
                   className="text-center py-8 text-gray-500"
                 >
                   No results match your search
@@ -169,9 +181,7 @@ export default function RegistrationLogsTable({
                   className="border-b border-gray-100 hover:bg-blue-50 transition-colors duration-150"
                 >
                   <td className="py-3 px-4">
-                    <span className={`px-2 py-1 rounded text-xs font-medium ${
-                      reg.type === 'Surat' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                    }`}>
+                    <span className={`px-2 py-1 rounded text-xs font-medium ${getTypeBadgeColor(reg.type)}`}>
                       {reg.type}
                     </span>
                   </td>
@@ -179,7 +189,6 @@ export default function RegistrationLogsTable({
                   <td className="py-3 px-4 font-mono text-sm font-medium text-blue-600">
                     {reg.referenceNumber || '-'}
                   </td>
-                  <td className="py-3 px-4">{reg.staffId}</td>
                   <td className="py-3 px-4">{reg.name}</td>
                   <td className="py-3 px-4 text-sm">{reg.department}</td>
                   <td className="py-3 px-4 text-sm">{reg.title}</td>

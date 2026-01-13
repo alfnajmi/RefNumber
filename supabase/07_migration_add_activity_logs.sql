@@ -6,7 +6,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   action TEXT NOT NULL, -- 'create' or 'delete'
   registration_number TEXT NOT NULL,
-  registration_type TEXT NOT NULL, -- 'Surat' or 'Memo'
+  registration_type TEXT NOT NULL, -- 'Letter' or 'Memo'
   staff_id TEXT NOT NULL,
   staff_name TEXT NOT NULL,
   department TEXT NOT NULL,

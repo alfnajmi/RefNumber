@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
         // Map snake_case to camelCase
         const results: Registration[] = data.map((reg) => ({
             number: reg.number,
-            type: reg.type as 'Surat' | 'Memo',
+            type: reg.type as 'Letter' | 'Memo',
             staffId: reg.staff_id,
             name: reg.name,
             department: reg.department,

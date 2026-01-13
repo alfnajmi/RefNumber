@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Registration, ActivityLog } from "@/types";
+import Image from "next/image";
+import { Registration, ActivityLog, DOCUMENT_TYPE_CODES, DocumentType } from "@/types";
 import { DEPARTMENT_CODES } from "@/types";
 import RegistrationForm from "@/components/registration/RegistrationForm";
 import QuickCheck from "@/components/quick-check/QuickCheck";
@@ -22,7 +23,7 @@ export default function Home() {
   const [noticeMessage, setNoticeMessage] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
-  const [docType] = useState<'Surat' | 'Memo'>("Surat");
+  const [docType] = useState<'Letter' | 'Memo'>("Letter");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -123,7 +124,7 @@ export default function Home() {
 
   const handleRegister = async (data: {
     number: string;
-    type: 'Surat' | 'Memo';
+    type: DocumentType;
     fileSecurityCode: string;
     staffId: string;
     name: string;
@@ -245,7 +246,7 @@ export default function Home() {
 
     // Generate reference number for the edited registration
     const deptCode = DEPARTMENT_CODES[editingRegistration.department] || "0";
-    const typeCode = editingRegistration.type === "Memo" ? "2" : "1";
+    const typeCode = DOCUMENT_TYPE_CODES[editingRegistration.type];
     const year = new Date().getFullYear();
     const sequenceNumber = editingRegistration.number.padStart(3, "0");
     const securityCode = editingRegistration.fileSecurityCode || "T";
@@ -330,17 +331,22 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mb-4 shadow-lg">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          <div className="inline-flex items-center justify-center mb-4">
+            <Image
+              src="/Gemini_Generated_Image_dq1ktcdq1ktcdq1k-removebg-preview.png"
+              alt="DIGD Logo"
+              width={300}
+              height={300}
+              className="object-contain"
+              priority
+            />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-            Mailing Number System
+            DIGD Document Management System (DDMS)
           </h1>
-          <p className="text-gray-600 text-lg">
-            Manage and track mailing numbers for MCMC DIGD
-          </p>
+          {/* <p className="text-gray-600 text-lg">
+            Manage and track document numbers for MCMC DIGD
+          </p> */}
         </div>
 
         <NoticeMessage message={noticeMessage} />
@@ -372,7 +378,7 @@ export default function Home() {
         />
 
         {/* Activity Logs */}
-        <ActivityLogsTable activityLogs={activityLogs} />
+        {/* <ActivityLogsTable activityLogs={activityLogs} /> */}
       </div>
 
       {/* Modals */}

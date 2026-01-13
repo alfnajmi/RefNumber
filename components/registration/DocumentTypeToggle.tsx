@@ -1,33 +1,35 @@
 "use client";
 
+import { DocumentType } from "@/types";
+
 interface DocumentTypeToggleProps {
-  value: 'Surat' | 'Memo';
-  onChange: (type: 'Surat' | 'Memo') => void;
+  value: DocumentType;
+  onChange: (type: DocumentType) => void;
 }
+
+const DOCUMENT_TYPES: { value: DocumentType; label: string }[] = [
+  { value: "Letter", label: "Letter" },
+  { value: "Memo", label: "Memo" },
+  { value: "Minister Minutes", label: "Minister Minutes" },
+  { value: "Dictionary", label: "Dictionary" },
+];
 
 export default function DocumentTypeToggle({ value, onChange }: DocumentTypeToggleProps) {
   return (
-    <div className="mb-6 flex p-1 bg-gray-100 rounded-lg">
-      <button
-        onClick={() => onChange("Surat")}
-        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-          value === "Surat"
-            ? "bg-white text-blue-600 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
-        }`}
-      >
-        Surat
-      </button>
-      <button
-        onClick={() => onChange("Memo")}
-        className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-          value === "Memo"
-            ? "bg-white text-blue-600 shadow-sm"
-            : "text-gray-500 hover:text-gray-700"
-        }`}
-      >
-        Memo
-      </button>
+    <div className="mb-6 grid grid-cols-2 gap-2 p-1 bg-gray-100 rounded-lg">
+      {DOCUMENT_TYPES.map((docType) => (
+        <button
+          key={docType.value}
+          onClick={() => onChange(docType.value)}
+          className={`py-2 px-3 text-sm font-medium rounded-md transition-all ${
+            value === docType.value
+              ? "bg-white text-blue-600 shadow-sm"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+        >
+          {docType.label}
+        </button>
+      ))}
     </div>
   );
 }

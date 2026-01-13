@@ -38,12 +38,12 @@ export default function EditRegistrationModal({
               onChange={(e) =>
                 setRegistration({
                   ...registration,
-                  type: e.target.value as 'Surat' | 'Memo',
+                  type: e.target.value as 'Letter' | 'Memo',
                 })
               }
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="Surat">Surat</option>
+              <option value="Letter">Letter</option>
               <option value="Memo">Memo</option>
             </select>
           </div>

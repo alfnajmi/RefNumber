@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DEPARTMENTS, DEPARTMENT_CODES } from "@/types";
+import { DEPARTMENTS, DEPARTMENT_CODES, DocumentType, DOCUMENT_TYPE_CODES } from "@/types";
 import { staffDatabase, getStaffByDepartment } from "@/data/staff";
 import DocumentTypeToggle from "./DocumentTypeToggle";
 import FileSecurityCodeSelect from "./FileSecurityCodeSelect";
@@ -11,7 +11,7 @@ import SuccessMessage from "../ui/SuccessMessage";
 interface RegistrationFormProps {
   onRegister: (data: {
     number: string;
-    type: 'Surat' | 'Memo';
+    type: DocumentType;
     fileSecurityCode: string;
     staffId: string;
     name: string;
@@ -36,7 +36,7 @@ export default function RegistrationForm({
   const [staffId, setStaffId] = useState("");
   const [title, setTitle] = useState("");
   const [fileSecurityCode, setFileSecurityCode] = useState("T");
-  const [docType, setDocType] = useState<'Surat' | 'Memo'>("Surat");
+  const [docType, setDocType] = useState<DocumentType>("Letter");
 
   const handleDepartmentChange = (dept: string) => {
     setDepartment(dept);
@@ -56,7 +56,7 @@ export default function RegistrationForm({
     if (!department || !mailingNumber) return "";
 
     const deptCode = DEPARTMENT_CODES[department] || "0";
-    const typeCode = docType === "Memo" ? "2" : "1";
+    const typeCode = DOCUMENT_TYPE_CODES[docType];
     const year = new Date().getFullYear();
     const sequenceNumber = mailingNumber.padStart(3, "0");
 

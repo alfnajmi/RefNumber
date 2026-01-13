@@ -49,7 +49,7 @@ export async function PATCH(
         const updatedRegistration: Registration = {
             id: data.id,
             number: data.number,
-            type: data.type as 'Surat' | 'Memo',
+            type: data.type as 'Letter' | 'Memo',
             fileSecurityCode: data.file_security_code,
             staffId: data.staff_id,
             name: data.name,

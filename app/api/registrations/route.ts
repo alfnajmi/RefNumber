@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Registration } from "@/types";
+import { Registration, DocumentType } from "@/types";
 import { supabase } from "@/lib/supabase";
 
 // GET - Fetch all registrations
@@ -16,7 +16,7 @@ export async function GET() {
         const registrations: Registration[] = data.map((reg) => ({
             id: reg.id,
             number: reg.number,
-            type: reg.type as 'Surat' | 'Memo',
+            type: reg.type as DocumentType,
             fileSecurityCode: reg.file_security_code,
             staffId: reg.staff_id,
             name: reg.name,
@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
         const newRegistration: Registration = {
             id: data.id,
             number: data.number,
-            type: data.type as 'Surat' | 'Memo',
+            type: data.type as DocumentType,
             fileSecurityCode: data.file_security_code,
             staffId: data.staff_id,
             name: data.name,

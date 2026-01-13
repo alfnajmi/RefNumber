@@ -1,8 +1,8 @@
-# Mailing Number System - Developer Documentation
+# DIGD Document Tracking System (DDTS) - Developer Documentation
 
 ## Project Overview
 
-The Mailing Number System is a Next.js application designed to manage and track mailing numbers for the Malaysian Communications and Multimedia Commission (MCMC) - Digital Innovation and Geospatial Division (DIGD). The system generates reference numbers for official documents (Surat/Memo) with proper department codes and security classifications.
+The DIGD Document Tracking System (DDTS) is a Next.js application designed to manage and track mailing numbers for the Malaysian Communications and Multimedia Commission (MCMC) - Digital Innovation and Geospatial Division (DIGD). The system generates reference numbers for official documents (Letter/Memo) with proper department codes and security classifications.
 
 ## Technology Stack
 
@@ -29,7 +29,7 @@ RefNumber/
 ├── components/
 │   ├── registration/
 │   │   ├── RegistrationForm.tsx   # Main registration form
-│   │   ├── DocumentTypeToggle.tsx # Surat/Memo toggle
+│   │   ├── DocumentTypeToggle.tsx # Letter/Memo toggle
 │   │   ├── FileSecurityCodeSelect.tsx
 │   │   └── ReferenceNumberPreview.tsx
 │   ├── logs/
@@ -47,8 +47,13 @@ RefNumber/
 │   └── staff.ts                    # Staff database
 ├── lib/
 │   └── supabase.ts                 # Supabase client configuration
-└── types/
-    └── index.ts                    # TypeScript type definitions
+├── supabase/                       # Database schema & migrations
+│   ├── README.md                   # Database documentation
+│   ├── 00_complete_schema.sql     # Complete schema (use this for new setup)
+│   └── [01-07]_migration_*.sql    # Historical migration files
+├── types/
+│   └── index.ts                    # TypeScript type definitions
+└── CLAUDE.md                       # This file - Project documentation
 
 ```
 
@@ -56,7 +61,7 @@ RefNumber/
 
 ### 1. Number Registration
 - Auto-generate sequential mailing numbers
-- Support for two document types: Surat (Letter) and Memo
+- Support for four document types: Letter, Memo, Minister Minutes, and Dictionary
 - Department-based registration
 - Staff assignment with ID verification
 - File security code classification (T, S, TD, R, RB)
@@ -70,7 +75,7 @@ MCMC (X) DIGD -Y/Z/YYYY/NNN
 Where:
 - `X` = File Security Code (T/S/TD/R/RB)
 - `Y` = Department Code (1-6)
-- `Z` = Document Type Code (1=Surat, 2=Memo)
+- `Z` = Document Type Code (1=Letter, 2=Memo, 3=Minister Minutes, 4=Dictionary)
 - `YYYY` = Current Year
 - `NNN` = Sequential Number (zero-padded to 3 digits)
 
@@ -129,7 +134,7 @@ Create a new registration.
 ```json
 {
   "number": "0001",
-  "type": "Surat",
+  "type": "Letter",
   "fileSecurityCode": "T",
   "staffId": "STAFF001",
   "name": "John Doe",
@@ -160,19 +165,98 @@ Search registrations by:
 
 ## Database Schema (Supabase)
 
-### Table: `registrations`
+**For complete database schema and migration instructions, see [/supabase/README.md](supabase/README.md)**
+
+### Quick Setup
+
+For new database setup, run the complete schema file:
+```
+/supabase/00_complete_schema.sql
+```
+
+This creates all tables, triggers, views, and indexes in one go.
+
+### Database Tables
+
+The system uses 4 main tables:
+
+#### 1. `registrations` (Main Table)
+Stores all active mailing number registrations.
 
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid | Primary key (auto-generated) |
-| number | text | Mailing number |
-| type | text | Document type (Surat/Memo) |
-| file_security_code | text | Security classification |
+| number | text | Mailing number (e.g., "0001") |
+| type | text | Document type (Letter/Memo) |
+| title | text | Document title/subject |
+| file_security_code | text | Security classification (T/S/TD/R/RB) |
 | staff_id | text | Staff identifier |
 | name | text | Staff name |
 | department | text | Department name |
 | reference_number | text | Full reference number |
 | registered_at | timestamp | Registration timestamp |
+
+#### 2. `deleted_numbers` (Archive Table)
+Archives all deleted registrations for audit trail (automatically populated by trigger).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| number | text | Original mailing number |
+| type | text | Document type |
+| title | text | Document title |
+| file_security_code | text | Security code |
+| staff_id | text | Original staff ID |
+| staff_name | text | Original staff name |
+| department | text | Original department |
+| reference_number | text | Original reference number |
+| registered_at | timestamp | Original registration time |
+| deleted_at | timestamp | Deletion timestamp |
+| deleted_by | text | Who deleted it |
+| deletion_remarks | text | Reason for deletion |
+
+#### 3. `sequence_numbers` (Sequence Tracking)
+Tracks current sequence numbers per document type and year (automatically maintained by trigger).
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| type | text | Document type (Letter/Memo) |
+| year | integer | Year (sequences reset annually) |
+| current_number | integer | Last used sequence number |
+| last_updated | timestamp | Last update time |
+
+#### 4. `activity_logs` (Activity Logging)
+Logs all create and delete activities for audit trail.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | uuid | Primary key |
+| action | text | "create" or "delete" |
+| registration_number | text | The mailing number |
+| registration_type | text | Document type |
+| staff_id | text | Staff identifier |
+| staff_name | text | Staff name |
+| department | text | Department name |
+| reference_number | text | Reference number |
+| remarks | text | Optional notes/reasons |
+| performed_by | text | Who performed the action |
+| created_at | timestamp | Activity timestamp |
+
+### Automatic Features
+
+The database includes automatic triggers that:
+1. **Archive deleted registrations** - When a registration is deleted, it's automatically archived to `deleted_numbers`
+2. **Track sequence numbers** - When a registration is created, the sequence number is automatically updated in `sequence_numbers`
+
+### Helper Views
+
+The schema includes 5 views for easy data access:
+- `recent_deletions` - Last 100 deletions
+- `sequence_summary` - Current sequence numbers
+- `deletion_stats` - Deletion statistics by type/year
+- `active_registrations_summary` - Active registration summary
+- `activity_summary` - Last 500 activities
 
 ## Environment Variables
 
@@ -191,16 +275,25 @@ npm install
 ```
 
 2. Configure Supabase:
-   - Create a Supabase project
-   - Create the `registrations` table with the schema above
+   - Create a Supabase project at https://supabase.com
+   - Go to SQL Editor
+   - Run the complete schema: `/supabase/00_complete_schema.sql`
+   - This creates all tables, triggers, views, and indexes
+   - For detailed instructions, see [/supabase/README.md](supabase/README.md)
    - Add your Supabase credentials to `.env.local`
 
-3. Run development server:
+3. Set up environment variables:
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+```
+
+4. Run development server:
 ```bash
 npm run dev
 ```
 
-4. Open [http://localhost:3000](http://localhost:3000)
+5. Open [http://localhost:3000](http://localhost:3000)
 
 ## Build & Deploy
 
@@ -214,7 +307,17 @@ npm start
 
 ## Recent Updates
 
-### Auto Button Fix (Latest)
+### Database Schema Centralization (2026-01-12)
+Centralized all database schema and migrations in `/supabase` folder:
+- Created comprehensive schema file: `00_complete_schema.sql` with all tables, triggers, views
+- Added 4 main tables: registrations, deleted_numbers, sequence_numbers, activity_logs
+- Implemented automatic triggers for archiving deletions and tracking sequences
+- Added 5 helper views for reporting and monitoring
+- Moved all SQL files to `/supabase` folder with organized naming
+- Created detailed README with migration instructions and schema documentation
+- All fields now covered: title, remarks, deletion tracking, sequence tracking
+
+### Auto Button Fix
 Fixed the auto-generate button functionality:
 - Updated `onGenerateNumber` prop type from `() => void` to `() => string`
 - Modified button onClick handler to properly set the mailing number state
@@ -267,7 +370,7 @@ Edit `generateReferenceNumber()` function in:
 ## Testing
 
 Manual testing checklist:
-- [ ] Register a new number (Surat)
+- [ ] Register a new number (Letter)
 - [ ] Register a new number (Memo)
 - [ ] Auto-generate number works correctly
 - [ ] Search functionality works
@@ -280,22 +383,24 @@ Manual testing checklist:
 ## Known Issues & Limitations
 
 1. No user authentication implemented
-2. Single-year sequence (resets annually)
-3. No audit trail for modifications
-4. No bulk import/export functionality
-5. Department codes hardcoded (not configurable via UI)
+2. Single-year sequence (resets annually) - by design, automatically managed
+3. No bulk import/export functionality
+4. Department codes hardcoded (not configurable via UI)
+5. Audit trail is automatic but limited to create/delete actions (no edit tracking yet)
 
 ## Future Enhancements
 
 - [ ] User authentication and authorization
-- [ ] Multi-year sequence management
+- [ ] Multi-year sequence management and reporting
 - [ ] Export to PDF/Excel functionality
-- [ ] Audit trail and change history
+- [ ] Enhanced audit trail (track edits, not just create/delete)
 - [ ] Bulk upload via CSV
 - [ ] Advanced filtering and sorting
-- [ ] Dashboard with statistics
+- [ ] Dashboard with statistics (using existing views)
 - [ ] Email notifications
 - [ ] Print-friendly view
+- [ ] Restore deleted registrations functionality
+- [ ] Activity log filtering and search
 
 ## Support & Maintenance
 
