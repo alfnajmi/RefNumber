@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { Registration, ActivityLog } from "@/types";
+import { Registration, ActivityLog, DOCUMENT_TYPE_CODES, DocumentType } from "@/types";
 import { DEPARTMENT_CODES } from "@/types";
 import RegistrationForm from "@/components/registration/RegistrationForm";
 import QuickCheck from "@/components/quick-check/QuickCheck";
@@ -23,7 +23,7 @@ export default function Home() {
   const [noticeMessage, setNoticeMessage] = useState("");
   const [showResetModal, setShowResetModal] = useState(false);
   const [resetConfirmText, setResetConfirmText] = useState("");
-  const [docType] = useState<'Surat' | 'Memo'>("Surat");
+  const [docType] = useState<'Letter' | 'Memo'>("Letter");
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingRegistration, setEditingRegistration] = useState<Registration | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -124,7 +124,7 @@ export default function Home() {
 
   const handleRegister = async (data: {
     number: string;
-    type: 'Surat' | 'Memo';
+    type: DocumentType;
     fileSecurityCode: string;
     staffId: string;
     name: string;
@@ -246,7 +246,7 @@ export default function Home() {
 
     // Generate reference number for the edited registration
     const deptCode = DEPARTMENT_CODES[editingRegistration.department] || "0";
-    const typeCode = editingRegistration.type === "Memo" ? "2" : "1";
+    const typeCode = DOCUMENT_TYPE_CODES[editingRegistration.type];
     const year = new Date().getFullYear();
     const sequenceNumber = editingRegistration.number.padStart(3, "0");
     const securityCode = editingRegistration.fileSecurityCode || "T";
@@ -342,11 +342,11 @@ export default function Home() {
             />
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-            DIGD Document Tracking System (DDTS)
+            DIGD Document Management System (DDMS)
           </h1>
-          <p className="text-gray-600 text-lg">
+          {/* <p className="text-gray-600 text-lg">
             Manage and track document numbers for MCMC DIGD
-          </p>
+          </p> */}
         </div>
 
         <NoticeMessage message={noticeMessage} />

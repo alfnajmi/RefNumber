@@ -1,13 +1,13 @@
 "use client";
 
-import { DEPARTMENT_CODES } from "@/types";
+import { DEPARTMENT_CODES, DocumentType } from "@/types";
 
 interface ReferenceNumberPreviewProps {
   referenceNumber: string;
   deptCode: string;
   typeCode: string;
   department: string;
-  docType: 'Surat' | 'Memo';
+  docType: DocumentType;
 }
 
 export default function ReferenceNumberPreview({
@@ -31,7 +31,7 @@ export default function ReferenceNumberPreview({
         <div>Format: MCMC (T) DIGD -[Dept]/[Type]/[Year]/[Seq]</div>
         <div className="mt-1">
           <span className="font-semibold">Dept Code:</span> {deptCode} •
-          <span className="font-semibold ml-2">Type Code:</span> {typeCode} (1=Surat, 2=Memo)
+          <span className="font-semibold ml-2">Type Code:</span> {typeCode} (1=Letter, 2=Memo, 3=Minister Minutes, 4=Dictionary)
         </div>
       </div>
     </div>

@@ -6,7 +6,7 @@ The DIGD Document Tracking System (DDTS) UI has been completely redesigned with 
 ## Color Scheme
 - **Primary Colors**: Blue gradient (from-blue-500 to-blue-600)
 - **Background**: Gradient from blue-50 via white to blue-50
-- **Accents**: Purple for Memo documents, Blue for Surat documents
+- **Accents**: Purple for Memo documents, Blue for Letter documents
 - **Text**: Gray-900 for headings, Gray-700 for body text
 
 ## Key Improvements

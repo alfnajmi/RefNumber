@@ -5,11 +5,22 @@ export interface Staff {
   department: string;
 }
 
+// Document types
+export type DocumentType = 'Letter' | 'Memo' | 'Minister Minutes' | 'Dictionary';
+
+// Document type codes (for reference number generation)
+export const DOCUMENT_TYPE_CODES: Record<DocumentType, string> = {
+  'Letter': '1',
+  'Memo': '2',
+  'Minister Minutes': '3',
+  'Dictionary': '4',
+};
+
 // Registration record interface
 export interface Registration {
   id?: string;
   number: string;
-  type: 'Surat' | 'Memo';
+  type: DocumentType;
   fileSecurityCode?: string; // T, S, TD, R, RB
   staffId: string;
   name: string;
@@ -24,7 +35,7 @@ export interface ActivityLog {
   id: string;
   action: 'create' | 'delete';
   registrationNumber: string;
-  registrationType: 'Surat' | 'Memo';
+  registrationType: DocumentType;
   staffId: string;
   staffName: string;
   department: string;

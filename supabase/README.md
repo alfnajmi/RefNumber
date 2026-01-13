@@ -33,7 +33,15 @@ If you already have a database and need to apply incremental updates, run the mi
 05_migration_add_reference_number.sql      → Adds reference_number column (legacy)
 06_migration_add_file_security_code.sql    → Adds file_security_code column (legacy)
 07_migration_add_activity_logs.sql         → Creates activity_logs table
+08_migration_surat_to_letter.sql           → Migrates "Surat" to "Letter" in existing data
 ```
+
+**IMPORTANT: If you have existing data with "Surat"**
+Run migration `08_migration_surat_to_letter.sql` to update all existing "Surat" references to "Letter". This migration:
+- Updates all 4 tables: registrations, deleted_numbers, sequence_numbers, activity_logs
+- Updates CHECK constraints to only allow "Letter" or "Memo"
+- Verifies no "Surat" records remain
+- Safe to run multiple times (idempotent)
 
 ## File Structure
 
@@ -61,6 +69,7 @@ These are historical migration files used to build the schema incrementally. The
 | `05_migration_add_reference_number.sql` | Add reference numbers (legacy) | `registrations.reference_number` column |
 | `06_migration_add_file_security_code.sql` | Add security codes (legacy) | `registrations.file_security_code` column |
 | `07_migration_add_activity_logs.sql` | Activity logging | `activity_logs` table |
+| `08_migration_surat_to_letter.sql` | Data migration (Surat → Letter) | Updates all existing "Surat" data to "Letter" |
 
 ## Database Schema Overview
 
@@ -73,7 +82,7 @@ Stores all active mailing number registrations.
 |--------|------|-------------|
 | `id` | UUID | Primary key (auto-generated) |
 | `number` | TEXT | Mailing number (e.g., "0001", "0002") |
-| `type` | TEXT | "Surat" or "Memo" |
+| `type` | TEXT | "Letter" or "Memo" |
 | `title` | TEXT | Document title/subject |
 | `file_security_code` | TEXT | T, S, TD, R, or RB |
 | `staff_id` | TEXT | Staff identifier |
@@ -99,7 +108,7 @@ Archives all deleted registrations for audit trail.
 |--------|------|-------------|
 | `id` | UUID | Primary key |
 | `number` | TEXT | Original mailing number |
-| `type` | TEXT | "Surat" or "Memo" |
+| `type` | TEXT | "Letter" or "Memo" |
 | `title` | TEXT | Document title |
 | `file_security_code` | TEXT | Security code |
 | `staff_id` | TEXT | Original staff ID |
@@ -125,7 +134,7 @@ Tracks current sequence numbers per document type and year.
 | Column | Type | Description |
 |--------|------|-------------|
 | `id` | UUID | Primary key |
-| `type` | TEXT | "Surat" or "Memo" |
+| `type` | TEXT | "Letter" or "Memo" |
 | `year` | INTEGER | Year (sequences reset annually) |
 | `current_number` | INTEGER | Last used sequence number |
 | `last_updated` | TIMESTAMP | Last update time |
@@ -144,7 +153,7 @@ Logs all create and delete activities.
 | `id` | UUID | Primary key |
 | `action` | TEXT | "create" or "delete" |
 | `registration_number` | TEXT | The mailing number |
-| `registration_type` | TEXT | "Surat" or "Memo" |
+| `registration_type` | TEXT | "Letter" or "Memo" |
 | `staff_id` | TEXT | Staff identifier |
 | `staff_name` | TEXT | Staff full name |
 | `department` | TEXT | Department name |
@@ -260,13 +269,13 @@ Test the triggers by creating and deleting a test registration:
 ```sql
 -- Insert test registration
 INSERT INTO registrations (number, type, title, file_security_code, staff_id, name, department, reference_number)
-VALUES ('9999', 'Surat', 'Test Document', 'T', 'TEST001', 'Test User', 'Test Department', 'MCMC (T) DIGD -1/1/2026/9999');
+VALUES ('9999', 'Letter', 'Test Document', 'T', 'TEST001', 'Test User', 'Test Department', 'MCMC (T) DIGD -1/1/2026/9999');
 
 -- Verify it appears in registrations
 SELECT * FROM registrations WHERE number = '9999';
 
 -- Verify sequence was updated
-SELECT * FROM sequence_numbers WHERE type = 'Surat';
+SELECT * FROM sequence_numbers WHERE type = 'Letter';
 
 -- Delete test registration
 DELETE FROM registrations WHERE number = '9999';
@@ -335,6 +344,26 @@ WHERE EXTRACT(YEAR FROM registered_at) = EXTRACT(YEAR FROM NOW())
 GROUP BY type
 ON CONFLICT (type, year) DO NOTHING;
 ```
+
+### Issue: "check constraint violated" for type "Surat"
+**Error:** `new row for relation "sequence_numbers" violates check constraint "sequence_numbers_type_check"`
+
+**Cause:** Your database has existing data with type "Surat" but the schema now only accepts "Letter" or "Memo".
+
+**Solution:** Run the data migration script:
+
+```sql
+-- In Supabase SQL Editor, run:
+/supabase/08_migration_surat_to_letter.sql
+```
+
+This will:
+1. Update all "Surat" records to "Letter" across all tables
+2. Update CHECK constraints to enforce "Letter" or "Memo" only
+3. Verify no "Surat" records remain
+4. Show a summary of updated records
+
+After running this migration, your application will work correctly with "Letter" terminology.
 
 ## Maintenance
 

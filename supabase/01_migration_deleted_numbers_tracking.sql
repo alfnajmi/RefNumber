@@ -10,7 +10,7 @@
 CREATE TABLE IF NOT EXISTS deleted_numbers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   number TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('Surat', 'Memo')),
+  type TEXT NOT NULL CHECK (type IN ('Letter', 'Memo')),
   file_security_code TEXT,
   staff_id TEXT,
   staff_name TEXT,
@@ -42,7 +42,7 @@ COMMENT ON COLUMN deleted_numbers.deletion_remarks IS 'Reason or notes about why
 -- Tracks the current/next available sequence number for each document type
 CREATE TABLE IF NOT EXISTS sequence_numbers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  type TEXT NOT NULL CHECK (type IN ('Surat', 'Memo')),
+  type TEXT NOT NULL CHECK (type IN ('Letter', 'Memo')),
   year INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM NOW()),
   current_number INTEGER NOT NULL DEFAULT 0,
   last_updated TIMESTAMP DEFAULT NOW(),

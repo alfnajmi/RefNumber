@@ -71,15 +71,24 @@ export default function DeleteConfirmationModal({
             This action cannot be undone.
           </p>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            Remarks (optional):
+            Reason for Deletion:
           </label>
-          <textarea
+          <select
             value={remarks}
             onChange={(e) => setRemarks(e.target.value)}
-            placeholder="Enter reason for deletion..."
-            rows={3}
-            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 resize-none"
-          />
+            className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 bg-white"
+          >
+            <option value="">Select a reason (optional)</option>
+
+            <option value="Incorrect information">Incorrect information</option>
+            <option value="Wrong document type">Wrong document type</option>
+
+            <option value="Wrong staff assignment">Wrong staff assignment</option>
+            <option value="Test entry">Test entry</option>
+            <option value="Cancelled document">Cancelled document</option>
+            <option value="Administrative correction">Administrative correction</option>
+            <option value="Other">Other</option>
+          </select>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Type <span className="font-bold">DELETE</span> to confirm:
           </label>

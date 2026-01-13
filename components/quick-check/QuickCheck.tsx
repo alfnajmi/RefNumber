@@ -8,7 +8,7 @@ interface QuickCheckProps {
   searchResults: Registration[];
   totalCount: number;
   nextNumber: string;
-  docType: 'Surat' | 'Memo';
+  docType: 'Letter' | 'Memo';
 }
 
 export default function QuickCheck({
@@ -64,7 +64,7 @@ export default function QuickCheck({
           {searchResults.map((result) => (
             <div key={`${result.type}-${result.number}`} className="text-sm text-gray-700 mb-2 p-2 bg-white rounded-lg">
               <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold mr-2 ${
-                result.type === 'Surat' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
+                result.type === 'Letter' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
               }`}>
                 {result.type}
               </span>
@@ -94,19 +94,19 @@ export default function QuickCheck({
 
       {/* Next Available Number */}
       <div className={`p-5 rounded-xl border-2 shadow-md ${
-        docType === 'Surat' ? 'bg-gradient-to-br from-blue-50 to-white border-blue-200' : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
+        docType === 'Letter' ? 'bg-gradient-to-br from-blue-50 to-white border-blue-200' : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
       }`}>
         <div className="flex items-center justify-between">
           <div>
             <div className="text-sm font-medium text-gray-600 mb-1">Next Available {docType} Number</div>
             <div className={`text-4xl font-bold ${
-              docType === 'Surat' ? 'text-blue-600' : 'text-purple-600'
+              docType === 'Letter' ? 'text-blue-600' : 'text-purple-600'
             }`}>{nextNumber}</div>
           </div>
           <div className={`p-3 rounded-full ${
-            docType === 'Surat' ? 'bg-blue-100' : 'bg-purple-100'
+            docType === 'Letter' ? 'bg-blue-100' : 'bg-purple-100'
           }`}>
-            <svg className={`w-7 h-7 ${docType === 'Surat' ? 'text-blue-600' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-7 h-7 ${docType === 'Letter' ? 'text-blue-600' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
             </svg>
           </div>

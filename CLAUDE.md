@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The DIGD Document Tracking System (DDTS) is a Next.js application designed to manage and track mailing numbers for the Malaysian Communications and Multimedia Commission (MCMC) - Digital Innovation and Geospatial Division (DIGD). The system generates reference numbers for official documents (Surat/Memo) with proper department codes and security classifications.
+The DIGD Document Tracking System (DDTS) is a Next.js application designed to manage and track mailing numbers for the Malaysian Communications and Multimedia Commission (MCMC) - Digital Innovation and Geospatial Division (DIGD). The system generates reference numbers for official documents (Letter/Memo) with proper department codes and security classifications.
 
 ## Technology Stack
 
@@ -29,7 +29,7 @@ RefNumber/
 ├── components/
 │   ├── registration/
 │   │   ├── RegistrationForm.tsx   # Main registration form
-│   │   ├── DocumentTypeToggle.tsx # Surat/Memo toggle
+│   │   ├── DocumentTypeToggle.tsx # Letter/Memo toggle
 │   │   ├── FileSecurityCodeSelect.tsx
 │   │   └── ReferenceNumberPreview.tsx
 │   ├── logs/
@@ -61,7 +61,7 @@ RefNumber/
 
 ### 1. Number Registration
 - Auto-generate sequential mailing numbers
-- Support for two document types: Surat (Letter) and Memo
+- Support for four document types: Letter, Memo, Minister Minutes, and Dictionary
 - Department-based registration
 - Staff assignment with ID verification
 - File security code classification (T, S, TD, R, RB)
@@ -75,7 +75,7 @@ MCMC (X) DIGD -Y/Z/YYYY/NNN
 Where:
 - `X` = File Security Code (T/S/TD/R/RB)
 - `Y` = Department Code (1-6)
-- `Z` = Document Type Code (1=Surat, 2=Memo)
+- `Z` = Document Type Code (1=Letter, 2=Memo, 3=Minister Minutes, 4=Dictionary)
 - `YYYY` = Current Year
 - `NNN` = Sequential Number (zero-padded to 3 digits)
 
@@ -134,7 +134,7 @@ Create a new registration.
 ```json
 {
   "number": "0001",
-  "type": "Surat",
+  "type": "Letter",
   "fileSecurityCode": "T",
   "staffId": "STAFF001",
   "name": "John Doe",
@@ -187,7 +187,7 @@ Stores all active mailing number registrations.
 |--------|------|-------------|
 | id | uuid | Primary key (auto-generated) |
 | number | text | Mailing number (e.g., "0001") |
-| type | text | Document type (Surat/Memo) |
+| type | text | Document type (Letter/Memo) |
 | title | text | Document title/subject |
 | file_security_code | text | Security classification (T/S/TD/R/RB) |
 | staff_id | text | Staff identifier |
@@ -221,7 +221,7 @@ Tracks current sequence numbers per document type and year (automatically mainta
 | Column | Type | Description |
 |--------|------|-------------|
 | id | uuid | Primary key |
-| type | text | Document type (Surat/Memo) |
+| type | text | Document type (Letter/Memo) |
 | year | integer | Year (sequences reset annually) |
 | current_number | integer | Last used sequence number |
 | last_updated | timestamp | Last update time |
@@ -370,7 +370,7 @@ Edit `generateReferenceNumber()` function in:
 ## Testing
 
 Manual testing checklist:
-- [ ] Register a new number (Surat)
+- [ ] Register a new number (Letter)
 - [ ] Register a new number (Memo)
 - [ ] Auto-generate number works correctly
 - [ ] Search functionality works

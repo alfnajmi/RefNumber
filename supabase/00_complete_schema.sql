@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS registrations (
 
   -- Registration Details
   number TEXT NOT NULL,
-  type TEXT NOT NULL DEFAULT 'Surat' CHECK (type IN ('Surat', 'Memo')),
+  type TEXT NOT NULL DEFAULT 'Letter' CHECK (type IN ('Letter', 'Memo')),
   title TEXT NOT NULL DEFAULT '',
 
   -- Security Classification
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS registrations (
 COMMENT ON TABLE registrations IS 'Main table storing all active mailing number registrations';
 COMMENT ON COLUMN registrations.id IS 'Unique identifier (UUID)';
 COMMENT ON COLUMN registrations.number IS 'Mailing number (e.g., 0001, 0002)';
-COMMENT ON COLUMN registrations.type IS 'Document type: Surat (Letter) or Memo';
+COMMENT ON COLUMN registrations.type IS 'Document type: Letter (Letter) or Memo';
 COMMENT ON COLUMN registrations.title IS 'Title or subject of the document';
 COMMENT ON COLUMN registrations.file_security_code IS 'T=Terbuka, S=Sulit, TD=Terhad, R=Rahsia, RB=Rahsia Besar';
 COMMENT ON COLUMN registrations.staff_id IS 'Staff identifier code';
@@ -112,7 +112,7 @@ CREATE TABLE IF NOT EXISTS deleted_numbers (
 
   -- Original Registration Data
   number TEXT NOT NULL,
-  type TEXT NOT NULL CHECK (type IN ('Surat', 'Memo')),
+  type TEXT NOT NULL CHECK (type IN ('Letter', 'Memo')),
   title TEXT,
   file_security_code TEXT,
   staff_id TEXT,
@@ -172,7 +172,7 @@ CREATE TABLE IF NOT EXISTS sequence_numbers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 
   -- Sequence Tracking
-  type TEXT NOT NULL CHECK (type IN ('Surat', 'Memo')),
+  type TEXT NOT NULL CHECK (type IN ('Letter', 'Memo')),
   year INTEGER NOT NULL DEFAULT EXTRACT(YEAR FROM NOW()),
   current_number INTEGER NOT NULL DEFAULT 0,
 
@@ -225,7 +225,7 @@ CREATE TABLE IF NOT EXISTS activity_logs (
   -- Action Details
   action TEXT NOT NULL CHECK (action IN ('create', 'delete')),
   registration_number TEXT NOT NULL,
-  registration_type TEXT NOT NULL CHECK (registration_type IN ('Surat', 'Memo')),
+  registration_type TEXT NOT NULL CHECK (registration_type IN ('Letter', 'Memo')),
 
   -- Staff Information
   staff_id TEXT NOT NULL,

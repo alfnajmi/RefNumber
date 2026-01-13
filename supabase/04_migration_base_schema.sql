@@ -2,7 +2,7 @@
 create table registrations (
   id uuid default gen_random_uuid() primary key,
   number text not null,
-  type text not null default 'Surat', -- 'Surat' or 'Memo'
+  type text not null default 'Letter', -- 'Letter' or 'Memo'
   file_security_code text, -- T, S, TD, R, RB
   staff_id text not null,
   name text not null,
