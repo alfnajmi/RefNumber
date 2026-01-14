@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DEPARTMENTS, DEPARTMENT_CODES, DocumentType, DOCUMENT_TYPE_CODES } from "@/types";
 import { staffDatabase, getStaffByDepartment } from "@/data/staff";
 import DocumentTypeToggle from "./DocumentTypeToggle";
@@ -19,15 +19,11 @@ interface RegistrationFormProps {
     title: string;
     referenceNumber: string;
   }) => Promise<void>;
-  nextNumber: string;
-  onGenerateNumber: () => string;
   successMessage: string;
 }
 
 export default function RegistrationForm({
   onRegister,
-  nextNumber,
-  onGenerateNumber,
   successMessage,
 }: RegistrationFormProps) {
   const [mailingNumber, setMailingNumber] = useState("");
@@ -37,6 +33,34 @@ export default function RegistrationForm({
   const [title, setTitle] = useState("");
   const [fileSecurityCode, setFileSecurityCode] = useState("T");
   const [docType, setDocType] = useState<DocumentType>("Letter");
+  const [useSpecificNumber, setUseSpecificNumber] = useState(false);
+  const [isLoadingNumber, setIsLoadingNumber] = useState(false);
+
+  // Fetch next available number when document type changes
+  useEffect(() => {
+    const fetchNextNumber = async () => {
+      if (useSpecificNumber) return;
+
+      setIsLoadingNumber(true);
+      try {
+        const response = await fetch(`/api/registrations/next-number?type=${encodeURIComponent(docType)}`);
+        if (response.ok) {
+          const data = await response.json();
+          setMailingNumber(data.nextNumber);
+        }
+      } catch (error) {
+        console.error("Error fetching next number:", error);
+      } finally {
+        setIsLoadingNumber(false);
+      }
+    };
+
+    fetchNextNumber();
+  }, [docType, useSpecificNumber]);
+
+  const handleDocTypeChange = (type: DocumentType) => {
+    setDocType(type);
+  };
 
   const handleDepartmentChange = (dept: string) => {
     setDepartment(dept);
@@ -89,6 +113,7 @@ export default function RegistrationForm({
     setStaffId("");
     setTitle("");
     setFileSecurityCode("T");
+    setUseSpecificNumber(false);
   };
 
   const availableNames = department
@@ -110,7 +135,7 @@ export default function RegistrationForm({
 
       <SuccessMessage message={successMessage} />
 
-      <DocumentTypeToggle value={docType} onChange={setDocType} />
+      <DocumentTypeToggle value={docType} onChange={handleDocTypeChange} />
 
       {/* Department */}
       <div className="mb-4">
@@ -182,24 +207,50 @@ export default function RegistrationForm({
 
       {/* Mailing Number */}
       <div className="mb-4">
-        <label className="block text-sm font-semibold text-gray-700 mb-2">
-          Mailing Number
-        </label>
-        <div className="flex gap-2">
+        <div className="flex items-center justify-between mb-2">
+          <label className="block text-sm font-semibold text-gray-700">
+            Mailing Number
+          </label>
+          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={useSpecificNumber}
+              onChange={(e) => {
+                setUseSpecificNumber(e.target.checked);
+                if (!e.target.checked) {
+                  setMailingNumber("");
+                }
+              }}
+              className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+            />
+            Request specific number
+          </label>
+        </div>
+        <div className="relative">
           <input
             type="text"
-            placeholder="e.g., 0001"
+            placeholder={useSpecificNumber ? "Enter specific number" : "Auto-generated"}
             value={mailingNumber}
             onChange={(e) => setMailingNumber(e.target.value)}
-            className="flex-1 px-4 py-2.5 border-2 border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-blue-300 font-mono"
+            readOnly={!useSpecificNumber}
+            className={`w-full px-4 py-2.5 border-2 rounded-lg font-mono transition-all duration-200 ${
+              useSpecificNumber
+                ? "border-gray-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent hover:border-blue-300"
+                : "border-gray-100 bg-gradient-to-r from-gray-50 to-blue-50 text-gray-600 cursor-not-allowed"
+            }`}
           />
-          <button
-            onClick={() => setMailingNumber(onGenerateNumber())}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-200 font-medium shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            Auto
-          </button>
+          {isLoadingNumber && !useSpecificNumber && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+              <svg className="animate-spin h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </div>
+          )}
         </div>
+        {!useSpecificNumber && (
+          <p className="text-xs text-gray-500 mt-1">Number will be auto-generated based on document type</p>
+        )}
       </div>
             {/* Document Title */}
       <div className="mb-4">
@@ -218,7 +269,7 @@ export default function RegistrationForm({
       <ReferenceNumberPreview
         referenceNumber={generateReferenceNumber()}
         deptCode={DEPARTMENT_CODES[department] || "0"}
-        typeCode={docType === "Memo" ? "2" : "1"}
+        typeCode={DOCUMENT_TYPE_CODES[docType]}
         department={department}
         docType={docType}
       />

@@ -1,7 +1,7 @@
 "use client";
 
 import { Registration } from "@/types";
-import { DEPARTMENTS, DEPARTMENT_CODES, FILE_SECURITY_CODES } from "@/types";
+import { DEPARTMENTS, DEPARTMENT_CODES, DOCUMENT_TYPE_CODES, FILE_SECURITY_CODES } from "@/types";
 import { staffDatabase, getStaffByDepartment } from "@/data/staff";
 
 interface EditRegistrationModalProps {
@@ -38,13 +38,15 @@ export default function EditRegistrationModal({
               onChange={(e) =>
                 setRegistration({
                   ...registration,
-                  type: e.target.value as 'Letter' | 'Memo',
+                  type: e.target.value as 'Letter' | 'Memo' | 'Minister Minutes' | 'Dictionary',
                 })
               }
               className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="Letter">Letter</option>
               <option value="Memo">Memo</option>
+              <option value="Minister Minutes">Minister Minutes</option>
+              <option value="Dictionary">Dictionary</option>
             </select>
           </div>
 
@@ -189,7 +191,7 @@ export default function EditRegistrationModal({
                 Updated Reference Number
               </label>
               <div className="text-sm font-mono font-bold text-blue-700">
-                {`MCMC (${registration.fileSecurityCode || "T"}) DIGD -${DEPARTMENT_CODES[registration.department]}/${registration.type === "Memo" ? "2" : "1"}/${new Date().getFullYear()}/${registration.number.padStart(3, "0")}`}
+                {`MCMC (${registration.fileSecurityCode || "T"}) DIGD -${DEPARTMENT_CODES[registration.department]}/${DOCUMENT_TYPE_CODES[registration.type]}/${new Date().getFullYear()}/${registration.number.padStart(3, "0")}`}
               </div>
             </div>
           )}
