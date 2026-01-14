@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ActivityLog, DocumentType } from "@/types";
+import { ActivityLog } from "@/types";
 import { supabase } from "@/lib/supabase";
 
 // GET - Fetch all activity logs
@@ -18,7 +18,7 @@ export async function GET() {
       id: log.id,
       action: log.action as 'create' | 'delete',
       registrationNumber: log.registration_number,
-      registrationType: log.registration_type as DocumentType,
+      registrationType: log.registration_type as 'Letter' | 'Memo',
       staffId: log.staff_id,
       staffName: log.staff_name,
       department: log.department,
@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
       id: data.id,
       action: data.action as 'create' | 'delete',
       registrationNumber: data.registration_number,
-      registrationType: data.registration_type as DocumentType,
+      registrationType: data.registration_type as 'Letter' | 'Memo',
       staffId: data.staff_id,
       staffName: data.staff_name,
       department: data.department,

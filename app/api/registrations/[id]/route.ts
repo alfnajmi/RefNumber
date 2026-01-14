@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Registration } from "@/types";
+import { Registration, DocumentType } from "@/types";
 import { supabase } from "@/lib/supabase";
 
 // PATCH - Update a specific registration
@@ -49,7 +49,7 @@ export async function PATCH(
         const updatedRegistration: Registration = {
             id: data.id,
             number: data.number,
-            type: data.type as 'Letter' | 'Memo',
+            type: data.type as DocumentType,
             fileSecurityCode: data.file_security_code,
             staffId: data.staff_id,
             name: data.name,

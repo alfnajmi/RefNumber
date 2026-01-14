@@ -1,14 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import { Registration } from "@/types";
+import { Registration, DocumentType } from "@/types";
 
 interface QuickCheckProps {
   onSearch: (query: string) => void;
   searchResults: Registration[];
   totalCount: number;
   nextNumber: string;
-  docType: 'Letter' | 'Memo';
+  docType: DocumentType;
 }
 
 export default function QuickCheck({
@@ -61,16 +61,22 @@ export default function QuickCheck({
             </svg>
             Search Results
           </h3>
-          {searchResults.map((result) => (
-            <div key={`${result.type}-${result.number}`} className="text-sm text-gray-700 mb-2 p-2 bg-white rounded-lg">
-              <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold mr-2 ${
-                result.type === 'Letter' ? 'bg-blue-100 text-blue-700' : 'bg-purple-100 text-purple-700'
-              }`}>
-                {result.type}
-              </span>
-              <span className="font-mono font-semibold">{result.number}</span> - {result.name} <span className="text-gray-500">({result.department})</span>
-            </div>
-          ))}
+          {searchResults.map((result) => {
+            const typeColors: Record<DocumentType, string> = {
+              'Letter': 'bg-blue-100 text-blue-700',
+              'Memo': 'bg-purple-100 text-purple-700',
+              'Minister Minutes': 'bg-amber-100 text-amber-700',
+              'Dictionary': 'bg-emerald-100 text-emerald-700',
+            };
+            return (
+              <div key={`${result.type}-${result.number}`} className="text-sm text-gray-700 mb-2 p-2 bg-white rounded-lg">
+                <span className={`inline-block px-2 py-1 rounded-md text-xs font-bold mr-2 ${typeColors[result.type]}`}>
+                  {result.type}
+                </span>
+                <span className="font-mono font-semibold">{result.number}</span> - {result.name} <span className="text-gray-500">({result.department})</span>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -93,25 +99,30 @@ export default function QuickCheck({
       </div>
 
       {/* Next Available Number */}
-      <div className={`p-5 rounded-xl border-2 shadow-md ${
-        docType === 'Letter' ? 'bg-gradient-to-br from-blue-50 to-white border-blue-200' : 'bg-gradient-to-br from-purple-50 to-white border-purple-200'
-      }`}>
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-sm font-medium text-gray-600 mb-1">Next Available {docType} Number</div>
-            <div className={`text-4xl font-bold ${
-              docType === 'Letter' ? 'text-blue-600' : 'text-purple-600'
-            }`}>{nextNumber}</div>
+      {(() => {
+        const docTypeStyles: Record<DocumentType, { bg: string; border: string; text: string; iconBg: string }> = {
+          'Letter': { bg: 'from-blue-50 to-white', border: 'border-blue-200', text: 'text-blue-600', iconBg: 'bg-blue-100' },
+          'Memo': { bg: 'from-purple-50 to-white', border: 'border-purple-200', text: 'text-purple-600', iconBg: 'bg-purple-100' },
+          'Minister Minutes': { bg: 'from-amber-50 to-white', border: 'border-amber-200', text: 'text-amber-600', iconBg: 'bg-amber-100' },
+          'Dictionary': { bg: 'from-emerald-50 to-white', border: 'border-emerald-200', text: 'text-emerald-600', iconBg: 'bg-emerald-100' },
+        };
+        const styles = docTypeStyles[docType];
+        return (
+          <div className={`p-5 rounded-xl border-2 shadow-md bg-gradient-to-br ${styles.bg} ${styles.border}`}>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="text-sm font-medium text-gray-600 mb-1">Next Available {docType} Number</div>
+                <div className={`text-4xl font-bold ${styles.text}`}>{nextNumber}</div>
+              </div>
+              <div className={`p-3 rounded-full ${styles.iconBg}`}>
+                <svg className={`w-7 h-7 ${styles.text}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+                </svg>
+              </div>
+            </div>
           </div>
-          <div className={`p-3 rounded-full ${
-            docType === 'Letter' ? 'bg-blue-100' : 'bg-purple-100'
-          }`}>
-            <svg className={`w-7 h-7 ${docType === 'Letter' ? 'text-blue-600' : 'text-purple-600'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
-            </svg>
-          </div>
-        </div>
-      </div>
+        );
+      })()}
     </div>
   );
 }

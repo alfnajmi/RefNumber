@@ -79,10 +79,10 @@ export default function DeleteConfirmationModal({
             className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4 bg-white"
           >
             <option value="">Select a reason (optional)</option>
-
+            <option value="Duplicate entry">Duplicate entry</option>
             <option value="Incorrect information">Incorrect information</option>
             <option value="Wrong document type">Wrong document type</option>
-
+            <option value="Wrong department">Wrong department</option>
             <option value="Wrong staff assignment">Wrong staff assignment</option>
             <option value="Test entry">Test entry</option>
             <option value="Cancelled document">Cancelled document</option>

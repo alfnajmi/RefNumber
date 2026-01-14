@@ -20,6 +20,17 @@ const getTypeBadgeColor = (type: DocumentType): string => {
   }
 };
 
+// Helper function to format date as DD/MM/YYYY HH:MM
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  const day = date.getDate().toString().padStart(2, '0');
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const year = date.getFullYear();
+  const hours = date.getHours().toString().padStart(2, '0');
+  const minutes = date.getMinutes().toString().padStart(2, '0');
+  return `${day}/${month}/${year} ${hours}:${minutes}`;
+};
+
 interface RegistrationLogsTableProps {
   registrations: Registration[];
   onEdit: (reg: Registration) => void;
@@ -193,7 +204,7 @@ export default function RegistrationLogsTable({
                   <td className="py-3 px-4 text-sm">{reg.department}</td>
                   <td className="py-3 px-4 text-sm">{reg.title}</td>
                   <td className="py-3 px-4 text-sm">
-                    {new Date(reg.registeredAt).toLocaleString()}
+                    {formatDate(reg.registeredAt)}
                   </td>
                   <td className="py-3 px-4">
                     <div className="flex gap-2">
