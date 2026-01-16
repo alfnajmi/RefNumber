@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { DocumentType } from "@/types";
 
 interface DocumentTypeToggleProps {
@@ -7,7 +8,7 @@ interface DocumentTypeToggleProps {
   onChange: (type: DocumentType) => void;
 }
 
-const DOCUMENT_TYPES: { value: DocumentType; label: string; icon: JSX.Element; color: string }[] = [
+const DOCUMENT_TYPES: { value: DocumentType; label: string; icon: React.ReactNode; color: string }[] = [
   {
     value: "Letter",
     label: "Letter",
