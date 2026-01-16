@@ -292,11 +292,45 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <Header />
-      <div className="max-w-7xl mx-auto p-8">
+      <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 sm:py-6 lg:p-8">
         <NoticeMessage message={noticeMessage} />
 
-        {/* Registration Form and Statistics - Side by Side */}
-        <div className="mb-6 flex gap-4 items-stretch">
+        {/* Statistics Cards - Mobile: Horizontal scroll, Desktop: Right sidebar */}
+        <div className="mb-4 lg:hidden">
+          <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 sm:-mx-6 sm:px-6 scrollbar-hide">
+            <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-3 flex-shrink-0 min-w-[120px]">
+              <div className="text-2xl font-bold text-blue-600">{registrations.length}</div>
+              <div className="text-xs text-gray-600">Total</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-3 flex-shrink-0 min-w-[100px]">
+              <div className="text-2xl font-bold text-blue-600">
+                {registrations.filter(r => r.type === "Letter").length}
+              </div>
+              <div className="text-xs text-gray-600">Letters</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg border border-purple-100 p-3 flex-shrink-0 min-w-[100px]">
+              <div className="text-2xl font-bold text-purple-600">
+                {registrations.filter(r => r.type === "Memo").length}
+              </div>
+              <div className="text-xs text-gray-600">Memos</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg border border-amber-100 p-3 flex-shrink-0 min-w-[100px]">
+              <div className="text-2xl font-bold text-amber-600">
+                {registrations.filter(r => r.type === "Minister Minutes").length}
+              </div>
+              <div className="text-xs text-gray-600">Minutes</div>
+            </div>
+            <div className="bg-white rounded-xl shadow-lg border border-emerald-100 p-3 flex-shrink-0 min-w-[100px]">
+              <div className="text-2xl font-bold text-emerald-600">
+                {registrations.filter(r => r.type === "Dictionary").length}
+              </div>
+              <div className="text-xs text-gray-600">Dictionary</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Registration Form and Statistics - Side by Side on Desktop */}
+        <div className="mb-4 sm:mb-6 flex flex-col lg:flex-row gap-4 items-stretch">
           {/* Registration Form */}
           <div className="flex-1">
             <RegistrationForm
@@ -305,8 +339,8 @@ export default function Home() {
             />
           </div>
 
-          {/* Statistics Cards */}
-          <div className="flex flex-col gap-2 w-[200px] shrink-0">
+          {/* Statistics Cards - Desktop Only */}
+          <div className="hidden lg:flex flex-col gap-2 w-[200px] shrink-0">
             <div className="bg-white rounded-xl shadow-lg border border-blue-100 p-4 flex-1 flex flex-col justify-center">
               <div className="text-5xl font-bold text-blue-600">{registrations.length}</div>
               <div className="text-sm text-gray-600 mt-1">Total Documents</div>
