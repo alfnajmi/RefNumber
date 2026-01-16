@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Image from "next/image";
 import { Registration, ActivityLog, DOCUMENT_TYPE_CODES, DocumentType } from "@/types";
 import { DEPARTMENT_CODES } from "@/types";
+import Header from "@/components/layout/Header";
 import RegistrationForm from "@/components/registration/RegistrationForm";
 import RegistrationLogsTable from "@/components/logs/RegistrationLogsTable";
 import ResetConfirmationModal from "@/components/modals/ResetConfirmationModal";
@@ -290,25 +290,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8 text-center">
-          <div className="inline-flex items-center justify-center mb-4">
-            <Image
-              src="/Gemini_Generated_Image_dq1ktcdq1ktcdq1k-removebg-preview.png"
-              alt="DIGD Logo"
-              width={300}
-              height={300}
-              className="object-contain"
-              priority
-            />
-          </div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent mb-2">
-            DIGD Document Management System (DDMS)
-          </h1>
-        </div>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
+      <Header />
+      <div className="max-w-7xl mx-auto p-8">
         <NoticeMessage message={noticeMessage} />
 
         {/* Registration Form and Statistics - Side by Side */}
