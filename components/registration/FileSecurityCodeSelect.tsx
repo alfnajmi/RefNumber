@@ -48,7 +48,7 @@ export default function FileSecurityCodeSelect({ value, onChange }: FileSecurity
       <label className="block text-sm font-semibold text-gray-700 mb-3">
         File Security Code
       </label>
-      <div className="grid grid-cols-5 gap-2">
+      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
         {FILE_SECURITY_CODES.map((item) => {
           const isActive = value === item.code;
           const colors = securityColors[item.code];
@@ -58,7 +58,7 @@ export default function FileSecurityCodeSelect({ value, onChange }: FileSecurity
               key={item.code}
               onClick={() => onChange(item.code)}
               className={`
-                relative flex flex-col items-center justify-center p-3 rounded-xl border-2 transition-all duration-200 shadow-sm
+                relative flex flex-col items-center justify-center p-2 sm:p-3 rounded-xl border-2 transition-all duration-200 shadow-sm
                 ${isActive
                   ? `${colors.bg} ${colors.border} ${colors.text} ring-2 ring-offset-2 ${colors.ring} shadow-md`
                   : "bg-white border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50"
@@ -66,12 +66,12 @@ export default function FileSecurityCodeSelect({ value, onChange }: FileSecurity
               `}
             >
               <div className={`
-                w-8 h-8 rounded-full flex items-center justify-center mb-1 font-bold text-xs
+                w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center mb-1 font-bold text-xs
                 ${isActive ? "bg-white/30 text-white" : "bg-gray-200 text-gray-600"}
               `}>
                 {item.code}
               </div>
-              <span className={`text-xs font-medium text-center leading-tight ${isActive ? "text-white" : ""}`}>
+              <span className={`text-[10px] sm:text-xs font-medium text-center leading-tight ${isActive ? "text-white" : ""}`}>
                 {item.label.split(" - ")[1] || item.label}
               </span>
             </button>

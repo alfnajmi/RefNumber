@@ -76,11 +76,11 @@ const colorClasses = {
 
 export default function DocumentTypeToggle({ value, onChange }: DocumentTypeToggleProps) {
   return (
-    <div className="mb-6">
-      <label className="block text-sm font-semibold text-gray-700 mb-3">
+    <div className="mb-4 sm:mb-6">
+      <label className="block text-sm font-semibold text-gray-700 mb-2 sm:mb-3">
         Document Type
       </label>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2 sm:gap-3">
         {DOCUMENT_TYPES.map((docType) => {
           const isActive = value === docType.value;
           const colors = colorClasses[docType.color as keyof typeof colorClasses];
@@ -90,7 +90,7 @@ export default function DocumentTypeToggle({ value, onChange }: DocumentTypeTogg
               key={docType.value}
               onClick={() => onChange(docType.value)}
               className={`
-                relative flex items-center gap-3 p-3 rounded-xl border-2 transition-all duration-200
+                relative flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl border-2 transition-all duration-200
                 ${isActive
                   ? `${colors.active} border-transparent`
                   : `${colors.inactive} border-gray-200 hover:border-gray-300`
@@ -98,15 +98,15 @@ export default function DocumentTypeToggle({ value, onChange }: DocumentTypeTogg
               `}
             >
               <div className={`
-                p-2 rounded-lg transition-colors
+                p-1.5 sm:p-2 rounded-lg transition-colors flex-shrink-0
                 ${isActive ? "bg-white/20" : "bg-gray-100"}
               `}>
                 {docType.icon}
               </div>
-              <span className="font-medium text-sm">{docType.label}</span>
+              <span className="font-medium text-xs sm:text-sm truncate">{docType.label}</span>
               {isActive && (
-                <div className="absolute top-2 right-2">
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <div className="absolute top-1.5 right-1.5 sm:top-2 sm:right-2">
+                  <svg className="w-3 h-3 sm:w-4 sm:h-4" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
                 </div>
