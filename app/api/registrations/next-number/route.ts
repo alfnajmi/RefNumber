@@ -1,25 +1,13 @@
-import { NextRequest, NextResponse } from "next/server";
-import { DocumentType } from "@/types";
+import { NextResponse } from "next/server";
 import { supabase } from "@/lib/supabase";
 
-// GET - Get next available number for a document type
-export async function GET(request: NextRequest) {
+// GET - Get next available number (shared across all document types)
+export async function GET() {
     try {
-        const { searchParams } = new URL(request.url);
-        const type = searchParams.get("type") as DocumentType;
-
-        if (!type) {
-            return NextResponse.json(
-                { error: "Document type is required" },
-                { status: 400 }
-            );
-        }
-
-        // Get the maximum number for this document type
+        // Get the maximum number across ALL document types (shared sequence)
         const { data, error } = await supabase
             .from("registrations")
             .select("number")
-            .eq("type", type)
             .order("number", { ascending: false })
             .limit(1);
 
@@ -33,11 +21,12 @@ export async function GET(request: NextRequest) {
             nextNumber = (maxNumber + 1).toString().padStart(4, "0");
         }
 
-        return NextResponse.json({ nextNumber, type });
-    } catch (error: any) {
+        return NextResponse.json({ nextNumber });
+    } catch (error: unknown) {
         console.error("Error getting next number:", error);
+        const errorMessage = error instanceof Error ? error.message : "Failed to get next number";
         return NextResponse.json(
-            { error: error.message || "Failed to get next number" },
+            { error: errorMessage },
             { status: 500 }
         );
     }
