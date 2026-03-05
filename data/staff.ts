@@ -38,12 +38,15 @@ export const staffDatabase: Staff[] = [
     { id: "1833", name: "Syireen Haziqah Mohamed Saari", department: "National Address Management Department" },
     { id: "1352", name: "Nurul Fatin Haziqah Mohamed Iqbal", department: "National Address Management Department" },
     { id: "1776", name: "Abby Asyura Bahaman", department: "National Address Management Department" },
+    { id: "N/A", name: "Khairul Imran Kamarudin", department: "National Address Management Department" },
 
     // Digital Innovation and Solutions Department
     { id: "2214", name: "Mohd Dahri Hadri Zafari", department: "Digital Innovation and Solutions Department" },
     { id: "2245", name: "Muhammad Hafizuddin Iberahim", department: "Digital Innovation and Solutions Department" },
     { id: "2229", name: "Aliff Najmi Ismail", department: "Digital Innovation and Solutions Department" },
     { id: "1796", name: "Muhammad Adib Mohd Akbar", department: "Digital Innovation and Solutions Department" },
+    { id: "N/A", name: "Isyraq", department: "Digital Innovation and Solutions Department" },
+    { id: "N/A", name: "Hariz", department: "Digital Innovation and Solutions Department" },
 ];
 
 // Helper function to get staff by ID
